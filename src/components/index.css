@@ -1,0 +1,116 @@
+@import '../../node_modules/antd/dist/antd.css';
+
+ul, li {
+    padding: 0;
+    margin: 0;
+    list-style: none
+}
+
+.show {
+    display: block;
+}
+
+.hidden {
+    display: none;
+}
+
+.flex {
+    display: -webkit-flex; /* Safari */
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: flex-start
+}
+
+.f1 {
+    flex: 1
+}
+
+.label-flex {
+    flex: 1;
+    text-align: left;
+}
+
+.item-flex {
+    flex: 3;
+    text-align: left;
+}
+
+.floatLeft {
+    float: left;
+}
+
+.floatRight {
+    float: right;
+}
+
+.ml2 {
+    margin-left: 2px
+}
+
+.ml5 {
+    margin-left: 5px
+}
+
+.ml10 {
+    margin-left: 10px
+}
+
+.mr10 {
+    margin-right: 10px
+}
+
+.mt1 {
+    margin-top: 1px
+}
+
+.mt20 {
+    margin-top: 20px;
+}
+
+.treeStyle {
+    margin: 20px 0 20% 10px;
+}
+
+.selectStyle {
+    width: 150px;
+}
+
+.navBar {
+    padding: 10px 10px 5px 10px;
+    background-color: #fff;
+}
+
+.back-green, .back-green:hover, .back-green:focus {
+    background-color: #67c23a;
+    border-color: #67c23a;
+}
+
+.generate {
+    margin: 20px 0 100px 10px;
+    width: 600px;
+}
+
+.title-one {
+    background-color: lavender;
+    padding: 2px 10px;
+}
+
+label.required::before {
+    display: inline-block;
+    margin-right: 4px;
+    color: #ff4d4f;
+    font-size: 14px;
+    font-family: SimSun, sans-serif;
+    line-height: 1;
+    content: '*';
+}
+
+li {
+    margin-top: 8px;
+}
+
+ul.manor {
+    border: 1px solid #ccc;
+    margin: 5px 0;
+    padding: 5px
+}

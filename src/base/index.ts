@@ -238,8 +238,8 @@ export function getNodeByPathWithTree(path: string, nodes: SourceNode[]): Source
  * @param nodes
  * @return TNode | null
  */
-export function getTreeNodeByPath(key: string, nodes: TNode[]): TNode | null {
-    let node: TNode | null = null
+export function getTreeNodeByPath(key: string, nodes: any[]): any {
+    let node: any
     for (const item of nodes) {
         if (item.key === key) return item
         node = getTreeNodeByPath(key, item.children)

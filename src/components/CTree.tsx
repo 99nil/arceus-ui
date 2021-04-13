@@ -14,7 +14,7 @@ import {
     updateTreeNodeByPath,
     yamlToObjMulti
 } from "../base";
-import {resources, treeResources} from "../data/base";
+import {resources} from "../data/base";
 import TextArea from "antd/lib/input/TextArea";
 import testdata from "../data/prometheusrule";
 
@@ -47,32 +47,80 @@ class CTree extends React.Component<any, any> {
         return o;
     }
 
-    buildFullData = (data: any): any => {
+    buildFullData = (data: any, prefix: string = ''): any => {
+        if (prefix === '') prefix = randomString(6)
         let result: any = {}
         for (let k in data) {
             if (!data.hasOwnProperty(k)) continue
-            const v = data[k]
-            if (k === 'children') {
-                result.children = []
-                result._children = []
-                for (let vv of v) {
-                    result._children.push(this.buildFullData(vv))
+            result[k] = data[k]
+        }
+        result.children = []
+        result._children = []
+        for (let vv of data.children) {
+            result._children.push(this.buildFullData(vv, prefix))
+        }
+        if (data.required && data.required.length > 0) {
+            for (let vv of data.children) {
+                if (data.required.indexOf(vv.title) === -1) continue
+                let child = this.buildFullData(vv, prefix)
+                child.stats = {
+                    isRequired: true,
+                    isEdit: true,
                 }
-                if (!data.required || data.required.length === 0) continue
-                for (let vv of v) {
-                    if (data.required.indexOf(vv.title) === -1) continue
-                    let child = this.buildFullData(vv)
-                    child.stats = {
-                        isRequired: true,
-                        isEdit: true,
-                    }
-                    // 设置默认字段不允许编辑
-                    if (['root.apiVersion', 'root.kind'].indexOf(child.key) !== -1) child.stats.isEdit = false
-                    result.children.push(child)
-                }
-                continue
+                // 设置默认字段不允许编辑
+                if (['root.apiVersion', 'root.kind'].indexOf(child.key) !== -1) child.stats.isEdit = false
+                result.children.push(child)
             }
-            result[k] = v
+        }
+
+        // 添加节点状态
+        if (!result.stats) result.stats = {
+            isRequired: false,
+            isEdit: true,
+        }
+        // root节点去重名
+        result.key = prefix + '.' + result.key
+        // 构建Base Element元素标题
+        if ('array' === result.type) {
+            // 数组节点，有无对象类型
+            if (result._children.length > 0) {
+                result.title = this.createMenuTitle(result.key, result)
+            } else {
+                result.title = this.createPrefixNode(
+                    this.createMenuTitle(result.key, result),
+                    this.createArrInputNode(result.key),
+                )
+            }
+        } else if ('object' === result.type) {
+            // 对象节点，object string/string
+            if (result._children.length === 0) {
+                result.title = this.createPrefixNode(
+                    this.createMenuTitle(result.key, result),
+                    this.createKVInputNode(result.key),
+                )
+            } else {
+                result.title = this.createMenuTitle(result.key, result)
+            }
+        } else {
+            // 构建Select Element元素标题
+            if (result.enums && result.enums.length > 0) {
+                let options: ND[] = []
+                for (const v of result.enums) {
+                    options.push({
+                        name: v,
+                        desc: v,
+                    })
+                }
+                result.title = this.createPrefixNode(
+                    this.createMenuTitle(result.key, result),
+                    this.createSelectNode(result.key, options, result.value)
+                )
+            } else {
+                result.title = this.createPrefixNode(
+                    this.createMenuTitle(result.key, result),
+                    this.createInputNode(result.key, result.value)
+                )
+            }
         }
         return result
     }
@@ -563,17 +611,19 @@ class CTree extends React.Component<any, any> {
 
     /**
      * 构建子项菜单
-     * @param path
-     * @param source
-     * @param childs
+     * @param path 节点唯一路径标识
+     * @param source 该节点数据集
+     * @param childs 该节点当前渲染的子节点集合
      * @return React.ReactNode
      */
     createMenuTitle = (path: string, source: any, childs: string[] = []) => {
         // 获取未渲染的子项
         let notExistChildren = []
-        for (const item of source.children) if (!item.must && childs.indexOf(item.name) === -1) notExistChildren.push(item)
-        // 如果都渲染过， 则直接返回
-        if (notExistChildren.length === 0 && source.must) return this.createTitle(source.name, source.desc)
+        for (const item of source.children) childs.push(item.name)
+        for (const item of source._children) if (childs.indexOf(item.name) === -1) notExistChildren.push(item)
+        // 如果子项都渲染过并且为required节点， 则直接返回
+        if (notExistChildren.length === 0 && source.stats.isRequired) return this.createTitle(source.name, source.desc)
+        // 渲染不存在子项选择
         const set = notExistChildren.map((child, index) => {
             return this.createTitle(<Button
                 data-path={path}
@@ -585,8 +635,8 @@ class CTree extends React.Component<any, any> {
                 style={{margin: '5px'}}
             > {child.name} </Button>, child.desc, index)
         })
-        // 不是必须项，构建基础菜单
-        if (!source.must || source.name === ArrayNode) set.unshift(this.createDeleteMenu(path, source.name === ArrayNode))
+        // 不是required节点或者数组节点，构建基础菜单
+        if (!source.stats.isRequired || source.name === ArrayNode) set.unshift(this.createDeleteMenu(path, source.name === ArrayNode))
         return this.createTitle(<Popover
             trigger="click"
             content={<div style={{maxWidth: '500px'}}>{set}</div>}
@@ -603,13 +653,9 @@ class CTree extends React.Component<any, any> {
         // 获取选中节点
         const node = getTreeNodeByPath(path, this.state.data)
         if (!node) return
-        // 获取选中节点的原数据
-        const pathArr = path.split('.')
-        const source = getNodeByPathWithTree(pathArr.slice(1).join('.'), treeResources[strToLowerCase(pathArr[0].split('-')[0])])
-        if (!source) return
         // 添加或移除子项
         const children = [...node.children]
-        for (const s of source.items) {
+        for (const s of node._children) {
             if (delSet.indexOf(s.name) > -1) {
                 let delStatus = true
                 for (const c of children) {
@@ -618,7 +664,7 @@ class CTree extends React.Component<any, any> {
                         break
                     }
                 }
-                if (delStatus) children.push(this.buildTreeNodeData(s, path + '.' + s.name))
+                if (delStatus) children.push(s)
             }
             if (addSet.indexOf(s.name) > -1) {
                 let addIndex = -1
@@ -633,7 +679,7 @@ class CTree extends React.Component<any, any> {
         }
         let cs = []
         for (const v of children) cs.push(v.name)
-        node.title = this.createMenuTitle(path, source, cs)
+        node.title = this.createMenuTitle(path, node, cs)
         node.children = children
         // 更新选中节点
         const data = updateTreeNodeByPath(path, this.state.data, node)
@@ -730,6 +776,7 @@ class CTree extends React.Component<any, any> {
      */
     removeItem = (e: any) => {
         const path = e.target.getAttribute('data-path')
+        console.log(path)
         const node = getTreeNodeByPath(path, this.state.data)
         if (!node) return
         let data = updateTreeNodeByPath(path, this.state.data, null)

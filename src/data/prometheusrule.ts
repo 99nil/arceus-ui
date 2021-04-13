@@ -5,6 +5,8 @@ export default {
     "value": "",
     "descs": [],
     "required": [
+        "apiVersion",
+        "kind",
         "spec"
     ],
     "children": [
@@ -12,7 +14,7 @@ export default {
             "key": "root.apiVersion",
             "title": "apiVersion",
             "type": "string",
-            "value": "",
+            "value": "monitoring.coreos.com/v1",
             "descs": [
                 {
                     "locale": "",
@@ -26,7 +28,7 @@ export default {
             "key": "root.kind",
             "title": "kind",
             "type": "string",
-            "value": "",
+            "value": "PrometheusRule",
             "descs": [
                 {
                     "locale": "",

@@ -55,18 +55,24 @@ class CTree extends React.Component<any, any> {
             if (k === 'children') {
                 result.children = []
                 result._children = []
-                if (data.required && data.required.length > 0) {
-                    for (let vv of v) {
-                        if (data.required.indexOf(vv.title) === -1) continue
-                        result.children.push(this.buildFullData(vv))
-                    }
-                }
                 for (let vv of v) {
                     result._children.push(this.buildFullData(vv))
                 }
-            } else {
-                result[k] = v
+                if (!data.required || data.required.length === 0) continue
+                for (let vv of v) {
+                    if (data.required.indexOf(vv.title) === -1) continue
+                    let child = this.buildFullData(vv)
+                    child.stats = {
+                        isRequired: true,
+                        isEdit: true,
+                    }
+                    // 设置默认字段不允许编辑
+                    if (['root.apiVersion', 'root.kind'].indexOf(child.key) !== -1) child.stats.isEdit = false
+                    result.children.push(child)
+                }
+                continue
             }
+            result[k] = v
         }
         return result
     }

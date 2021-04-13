@@ -1,5 +1,5 @@
 import React from "react";
-import {message, Affix, Button, Dropdown, Menu, Popover, Drawer} from "antd";
+import {message, Affix, Button, Popover, Drawer} from "antd";
 import {
     PlusSquareOutlined,
     MinusSquareOutlined,
@@ -10,9 +10,7 @@ import {
     SettingOutlined
 } from '@ant-design/icons'
 import './index.css'
-import {kubernetesVersions} from "../data/base";
-import {ND} from "../base/base";
-import {randomString, sourceToNode} from "../base";
+import {randomString} from "../base";
 
 class NavBar extends React.Component<any, any> {
 
@@ -20,32 +18,8 @@ class NavBar extends React.Component<any, any> {
         super(props);
         this.state = {
             top: 0,
-            version: sourceToNode(kubernetesVersions).selects[0].name,
             configVisible: false,
         }
-    }
-
-    /**
-     * 修改kubernetes版本
-     * @param item
-     */
-    changeVersion(item: ND) {
-        this.setState({
-            version: item.name
-        })
-        if (typeof this.props.changeVersion) this.props.changeVersion(item.name)
-    }
-
-    /**
-     * 获取版本列表
-     */
-    getVersionList = () => {
-        const list = sourceToNode(kubernetesVersions).selects.map((item: ND, index) => {
-            return <Menu.Item key={index} onClick={() => this.changeVersion(item)}> {item.name} </Menu.Item>
-        })
-        return (
-            <Menu>{list}</Menu>
-        )
     }
 
     /**
@@ -117,11 +91,6 @@ class NavBar extends React.Component<any, any> {
         return (<>
             <Affix offsetTop={this.state.top}>
                 <div className="navBar">
-                    <Dropdown overlay={this.getVersionList} placement="bottomCenter">
-                        <Button className="ml2" type="primary">
-                            {this.state.version}
-                        </Button>
-                    </Dropdown>
                     <Popover trigger="hover" content="折叠全部">
                         <Button className="ml2" type="primary" onClick={this.fold}>
                             <PlusSquareOutlined/>

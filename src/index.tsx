@@ -5,7 +5,6 @@ import * as serviceWorker from './serviceWorker';
 import CTree from "./components/CTree";
 import {UnControlled as CodeMirror} from "react-codemirror2";
 import NavBar from "./components/NavBar";
-import {kubernetesDefaultVersion} from "./data/base";
 require('codemirror/mode/yaml/yaml')
 
 export default class App extends React.Component<any, any> {
@@ -14,10 +13,9 @@ export default class App extends React.Component<any, any> {
         super(props);
         this.state = {
             navBarRef: React.createRef(),
-            k8sTreeRef: React.createRef(),
+            cTreeRef: React.createRef(),
             defaultData: '',
             codeData: '',
-            version: kubernetesDefaultVersion,
         }
     }
 
@@ -27,32 +25,22 @@ export default class App extends React.Component<any, any> {
      */
     buildCodeData = (data: string) => this.setState({defaultData: data})
 
-    /**
-     * 改变版本
-     */
-    changeVersion = (version: string) => {
-        this.setState({ version })
-        this.state.k8sTreeRef.current.changeTreeDataVersion(version)
-    }
-
     render() {
         return (
             <div className="App">
                 <NavBar
                     ref={this.state.navBarRef}
                     data={this.state.codeData}
-                    fold={() => this.state.k8sTreeRef.current.foldAll()}
-                    unfold={() => this.state.k8sTreeRef.current.unfoldAll()}
-                    buildData={() => this.state.k8sTreeRef.current.convertToYaml()}
-                    parseData={() => this.state.k8sTreeRef.current.convertToTreeData(this.state.codeData)}
-                    changeVersion={this.changeVersion}
+                    fold={() => this.state.cTreeRef.current.foldAll()}
+                    unfold={() => this.state.cTreeRef.current.unfoldAll()}
+                    buildData={() => this.state.cTreeRef.current.convertToYaml()}
+                    parseData={() => this.state.cTreeRef.current.convertToTreeData(this.state.codeData)}
                 />
                 <div className="flex">
                     <CTree
                         className="trees"
-                        ref={this.state.k8sTreeRef}
+                        ref={this.state.cTreeRef}
                         buildYamlData={this.buildCodeData}
-                        version={this.state.version}
                     />
                     <CodeMirror
                         className="codes"

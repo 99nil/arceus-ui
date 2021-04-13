@@ -14,8 +14,9 @@ import {
     updateTreeNodeByPath,
     yamlToObjMulti
 } from "../base";
-import {getApiVersions, resources, treeResources} from "../data/base";
+import {resources, treeResources} from "../data/base";
 import TextArea from "antd/lib/input/TextArea";
+import testdata from "../data/prometheusrule";
 
 class CTree extends React.Component<any, any> {
 
@@ -25,6 +26,75 @@ class CTree extends React.Component<any, any> {
             kindRef: React.createRef(),
             data: [],
             expandedKeys: [],
+        }
+    }
+
+    deepClone = (obj: any): any => {
+        let o: any = {}
+        if (typeof obj != "object") return obj
+        if (obj === null) return null
+        if (obj instanceof Array) {
+            o = [];
+            for (let i = 0, len = obj.length; i < len; i++) {
+                o.push(this.deepClone(obj[i]))
+            }
+        } else {
+            for (let j in obj) {
+                if (!obj.hasOwnProperty(j)) continue
+                o[j] = this.deepClone(obj[j])
+            }
+        }
+        return o;
+    }
+
+    buildFullData = (data: any): any => {
+        let result: any = {}
+        for (let k in data) {
+            if (!data.hasOwnProperty(k)) continue
+            const v = data[k]
+            if (k === 'children') {
+                result.children = []
+                result._children = []
+                if (data.required && data.required.length > 0) {
+                    for (let vv of v) {
+                        if (data.required.indexOf(vv.title) === -1) continue
+                        result.children.push(this.buildFullData(vv))
+                    }
+                }
+                for (let vv of v) {
+                    result._children.push(this.buildFullData(vv))
+                }
+            } else {
+                result[k] = v
+            }
+        }
+        return result
+    }
+
+    // TODO 接口获取树结构，需要将指定字段转为Element元素
+    convert = (data: any): any => {
+        let result: any = this.deepClone(data)
+        for (let k in result) {
+            if (!result.hasOwnProperty(k)) continue
+            const v = this.deepClone(result[k])
+            if (k === 'enums' && v !== null && v.length > 0) {
+                result._enums = <div>enums</div>
+            }
+            if (k === 'children' && v !== null && v.length > 0) {
+                // TODO 在_children里只需要处理_children数据即可
+                // TODO children数据根据_children的required进行渲染
+                // TODO children数据不需要存在_children数据，只有根节点同时存在children和_children
+                result._children = v
+                result.children = []
+                if (result.required && result.required.length > 0) {
+                    for (let vv of v) {
+                        if (result.required.indexOf(vv.title) === -1) continue
+                        const child = this.convert(vv)
+                        result.children.push(child)
+                    }
+                }
+            }
+            return result
         }
     }
 
@@ -39,41 +109,15 @@ class CTree extends React.Component<any, any> {
     }
 
     /**
-     * 修改树结构数据的apiVersion
+     * 获取kind对应的渲染数据，并向数据集中增加一组
+     * @param group
+     * @param kind
      * @param version
      */
-    changeTreeDataVersion = (version: string) => {
-        const data: TNode[] = this.state.data
-        let newData: TNode[] = []
-        for (const v of data) {
-            const apiVersionNode = getApiVersions(version, v.name.split('-')[0])
-            for (const index in v.children) {
-                if (v.children[index].name === apiVersionNode.name) {
-                    v.children[index] = this.buildTreeNodeData(apiVersionNode, v.key + '.' + apiVersionNode.name)
-                    break
-                }
-            }
-            newData.push(v)
-        }
-        this.setState({data: newData})
-    }
-
-    /**
-     * 获取kind对应的渲染数据，并向数据集中增加一组
-     * @param kindName
-     * @param resource
-     */
-    generateResource = (kindName: string, resource: SourceNode[]) => {
-        const key = kindName + '-' + randomString(6)
-        const root: TNode = {
-            key,
-            name: key,
-            title: kindName,
-            type: SourceType.Object,
-            value: '',
-            children: this.buildTreeData(resource, key),
-        }
-        const data = [...this.state.data, root]
+    generateResource = (group: string, kind: string, version: string) => {
+        const fullData = this.buildFullData(testdata)
+        console.log(fullData)
+        const data = [...this.state.data, fullData]
         this.setState({data, expandedKeys: this.getExpandedKeys(data)})
     }
 
@@ -170,6 +214,7 @@ class CTree extends React.Component<any, any> {
 
     /**
      * 生成树结构数据
+     * @param str
      */
     convertToTreeData = (str: string) => {
         let obj: any
@@ -339,7 +384,7 @@ class CTree extends React.Component<any, any> {
 
     // 添加text节点
     createTextNode = (path: string, source: SourceNode) => {
-        return <TextArea data-path={path} onChange={this.changeInputValue} defaultValue={source.value} />
+        return <TextArea data-path={path} onChange={this.changeInputValue} defaultValue={source.value}/>
     }
 
     /**
@@ -497,8 +542,8 @@ class CTree extends React.Component<any, any> {
         > {title} </Popover>
     }
 
-    // TODO 构建基础菜单 => 移除、添加节点、添加数组节点
-    createBaseMenu = (path: string, isArray: boolean = false) => {
+    // 构建移除菜单
+    createDeleteMenu = (path: string, isArray: boolean = false) => {
         return <Button
             key="del"
             data-path={path}
@@ -517,10 +562,10 @@ class CTree extends React.Component<any, any> {
      * @param childs
      * @return React.ReactNode
      */
-    createMenuTitle = (path: string, source: SourceNode, childs: string[] = []) => {
+    createMenuTitle = (path: string, source: any, childs: string[] = []) => {
         // 获取未渲染的子项
         let notExistChildren = []
-        for (const item of source.items) if (!item.must && childs.indexOf(item.name) === -1) notExistChildren.push(item)
+        for (const item of source.children) if (!item.must && childs.indexOf(item.name) === -1) notExistChildren.push(item)
         // 如果都渲染过， 则直接返回
         if (notExistChildren.length === 0 && source.must) return this.createTitle(source.name, source.desc)
         const set = notExistChildren.map((child, index) => {
@@ -535,7 +580,7 @@ class CTree extends React.Component<any, any> {
             > {child.name} </Button>, child.desc, index)
         })
         // 不是必须项，构建基础菜单
-        if (!source.must || source.name === ArrayNode) set.unshift(this.createBaseMenu(path, source.name === ArrayNode))
+        if (!source.must || source.name === ArrayNode) set.unshift(this.createDeleteMenu(path, source.name === ArrayNode))
         return this.createTitle(<Popover
             trigger="click"
             content={<div style={{maxWidth: '500px'}}>{set}</div>}
@@ -769,8 +814,6 @@ class CTree extends React.Component<any, any> {
                 <KindList
                     ref={this.state.kindRef}
                     generateResource={this.generateResource}
-                    resourceType='tree'
-                    version={this.props.version}
                 />
                 <Tree
                     className="treeStyle"

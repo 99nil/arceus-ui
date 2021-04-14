@@ -484,13 +484,15 @@ class CTree extends React.Component<any, any> {
      */
     createMenuTitle = (path: string, source: any, childs: string[] = []) => {
         // 获取未渲染的子项
+        let desc = ''
+        if (source.descs && source.descs.length > 0) desc = source.descs[0].desc
         let notExistChildren = []
         for (const item of source.children) childs.push(item.name)
         for (const item of source._children) if (childs.indexOf(item.name) === -1) notExistChildren.push(item)
         // 如果子项都渲染过并且为required节点， 则直接返回
-        if (notExistChildren.length === 0 && source.stats.isRequired) return this.createTitle(source.name, source.desc)
+        if (notExistChildren.length === 0 && source.stats.isRequired) return this.createTitle(source.name, desc)
         // 渲染不存在子项选择
-        const set = notExistChildren.map((child, index) => {
+        let set = notExistChildren.map((child, index) => {
             // TODO 支持根据zh/en自动识别渲染
             let desc = ''
             if (child.descs && child.descs.length > 0) desc = child.descs[0].desc
@@ -505,9 +507,8 @@ class CTree extends React.Component<any, any> {
             > {child.name} </Button>, desc, index)
         })
         // 不是required节点或者数组节点，构建基础菜单
-        if (!source.stats.isRequired || source.type === 'array') set.unshift(this.createDeleteMenu(path, source.type === 'array'))
-        let desc = ''
-        if (source.descs && source.descs.length > 0) desc = source.descs[0].desc
+        if (!source.stats.isRequired) set.unshift(this.createDeleteMenu(path, source.type === 'array'))
+        if (source.type === 'array') set = [this.createDeleteMenu(path, source.type === 'array')]
         return this.createTitle(<Popover
             trigger="click"
             content={<div style={{maxWidth: '500px'}}>{set}</div>}
@@ -552,6 +553,8 @@ class CTree extends React.Component<any, any> {
         for (const v of children) cs.push(v.name)
         node.title = this.createMenuTitle(path, node, cs)
         node.children = children
+        console.log(node)
+
         // 更新选中节点
         const data = updateTreeNodeByPath(path, this.state.data, node)
         this.setState({data})

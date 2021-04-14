@@ -97,10 +97,7 @@ class CTree extends React.Component<any, any> {
         } else if ('object' === result.type) {
             // 对象节点，object string/string
             if (result._children.length === 0) {
-                result.title = this.createPrefixNode(
-                    this.createMenuTitle(result.key, result),
-                    this.createKVInputNode(result.key),
-                )
+                result.title = this.createAppendObjectNode(result.key, result)
             } else {
                 result.title = this.createMenuTitle(result.key, result)
             }
@@ -706,15 +703,15 @@ class CTree extends React.Component<any, any> {
      * @param e
      */
     addObjItem = (e: any) => {
-        const path = e.target.getAttribute('data-path')
+        const path = e.currentTarget.getAttribute('data-path')
         // 根据path获取tree节点信息
         const node = getTreeNodeByPath(path, this.state.data)
         if (!node) return
-        const key = randomString(6)
-        const tNode: TNode = {
-            key: path + '.' + key,
+        const key = path + '.' + randomString(6)
+        const tNode = {
+            key,
             name: '',
-            title: this.createKVInputNode(path + '.' + key),
+            title: this.createKVInputNode(key),
             type: SourceType.String,
             value: '',
             children: [],
@@ -729,7 +726,7 @@ class CTree extends React.Component<any, any> {
      * @param e
      */
     removeObjItem = (e: any) => {
-        const path = e.target.getAttribute('data-path')
+        const path = e.currentTarget.getAttribute('data-path')
         const node = getTreeNodeByPath(path, this.state.data)
         if (!node) return
         let data = updateTreeNodeByPath(path, this.state.data, null)

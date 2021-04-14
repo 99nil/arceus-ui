@@ -689,13 +689,16 @@ class CTree extends React.Component<any, any> {
         let tNode = {...node._children[0]}
         tNode.key = nodeChildNum
         // 数组节点添加需要重新构造添加后的所有子项key
+        let expandedKeys = this.state.expandedKeys
         if (tNode.type === 'object') {
             tNode = this.buildFullData(node._children[0], keyPath, path)
+            // TODO 需要去重
+            expandedKeys.push(node.key, tNode.key)
         }
         node.children.push(tNode)
         // 根据path更新tree
         const data = updateTreeNodeByPath(path, this.state.data, node)
-        this.setState({data})
+        this.setState({data, expandedKeys})
     }
 
     /**

@@ -1,5 +1,5 @@
 import React from "react";
-import {Button, Input, message, Popover, Select, Tree} from "antd";
+import {Button, Input, Popover, Select, Tree} from "antd";
 import {MinusCircleOutlined, PlusCircleOutlined, PlusSquareOutlined} from '@ant-design/icons'
 import KindList from "./KindList";
 import {ArrayNode, ND, SourceNode, SourceType, TNode} from "../base/base";
@@ -9,7 +9,6 @@ import {
     objToYaml,
     randomString,
     updateTreeNodeByPath,
-    yamlToObjMulti
 } from "../base";
 import TextArea from "antd/lib/input/TextArea";
 import testdata from "../data/prometheusrule";
@@ -130,7 +129,8 @@ class CTree extends React.Component<any, any> {
      */
     convertToYaml = () => {
         if (this.props.buildYamlData) {
-            const yamlData = objToYaml(this.parseTreeToObj(this.state.data))
+            const data = this.parseTreeToObj(this.state.data)
+            const yamlData = objToYaml(data)
             this.props.buildYamlData(yamlData)
         }
     }
@@ -145,113 +145,6 @@ class CTree extends React.Component<any, any> {
         const fullData = this.buildFullData(testdata)
         console.log(fullData)
         const data = [...this.state.data, fullData]
-        this.setState({data, expandedKeys: this.getExpandedKeys(data)})
-    }
-
-    /**
-     * 初始结构集转树结构集
-     * @param resource
-     * @param key
-     * @return TNode[]
-     */
-    buildTreeData = (resource: SourceNode[], key: string = ''): TNode[] => {
-        key = key === '' ? '' : key + '.'
-        let set: TNode[] = []
-        for (const index in resource) {
-            const v = resource[index]
-            // 跳过非必须节点的渲染
-            if (!v.must) continue
-            // 初始化结构
-            const node: TNode = this.buildTreeNodeData(v, v.name === ArrayNode ? key + index : key + v.name)
-            set.push(node)
-        }
-        return set
-    }
-
-    /**
-     * 初始结构转树结构
-     * @param source
-     * @param key
-     * @return TNode
-     */
-    buildTreeNodeData = (source: SourceNode, key: string = ''): TNode => {
-        let node: TNode = {
-            key,
-            name: source.name,
-            title: source.name,
-            type: source.type,
-            value: source.value,
-            children: [],
-        }
-        // 如果数组节点，单独渲染
-        if (source.name === ArrayNode) {
-            if (source.type === SourceType.Object) {
-                node.title = this.createMenuTitle(key, source)
-                node.children = this.buildTreeData(source.items, key)
-            } else {
-                node.title = this.createArrInputNode(key)
-            }
-            return node
-        }
-
-        // 如果类型是object，items为0，则渲染可添加的k/v输入框
-        // 如果类型是array，添加数组节点
-        switch (source.type) {
-            case SourceType.Object:
-                // 如果存在子节点
-                if (source.items.length > 0) {
-                    node.title = this.createMenuTitle(key, source)
-                    node.children = this.buildTreeData(source.items, key)
-                } else {
-                    node.title = this.createAppendObjectNode(key, source)
-                }
-                break
-            case SourceType.Array:
-                node.title = this.createAppendArrayNode(key, this.createMenuTitle(key, source))
-                node.children = this.buildTreeData(source.items, key)
-                break
-            case SourceType.Boolean:
-                if (source.selects.length === 0) source.selects = [
-                    {name: 'true', desc: 'true'},
-                    {name: 'false', desc: 'false'}
-                ]
-                node.title = this.createPrefixNode(
-                    this.createMenuTitle(key, source),
-                    this.createSelectNode(key, source.selects)
-                )
-                if (node.value === '') node.value = source.selects[0].name
-                break
-            default:
-                if (source.selects.length > 0) {
-                    if (node.value === '') node.value = source.selects[0].name
-                    node.title = this.createPrefixNode(
-                        this.createMenuTitle(key, source),
-                        this.createSelectNode(key, source.selects, node.value)
-                    )
-                } else {
-                    node.title = this.createPrefixNode(
-                        this.createMenuTitle(key, source),
-                        this.createInputNode(key)
-                    )
-                }
-                break
-        }
-        return node
-    }
-
-    /**
-     * 生成树结构数据
-     * @param str
-     */
-    convertToTreeData = (str: string) => {
-        let obj: any
-        try {
-            obj = yamlToObjMulti(str)
-        } catch (e) {
-            message.error('Yaml格式错误')
-            return
-        }
-        const data = this.parseObjToTreeData(obj)
         this.setState({data, expandedKeys: this.getExpandedKeys(data)})
     }
 
@@ -383,7 +276,7 @@ class CTree extends React.Component<any, any> {
      * @param nodes
      * @return any
      */
-    parseTreeToObj = (nodes: TNode[]): any => {
+    parseTreeToObj = (nodes: any[]): any => {
         let obj: any = {}
         for (const v of nodes) {
             switch (v.type) {

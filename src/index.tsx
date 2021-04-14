@@ -34,7 +34,7 @@ export default class App extends React.Component<any, any> {
                     fold={() => this.state.cTreeRef.current.foldAll()}
                     unfold={() => this.state.cTreeRef.current.unfoldAll()}
                     buildData={() => this.state.cTreeRef.current.convertToYaml()}
-                    parseData={() => this.state.cTreeRef.current.convertToTreeData(this.state.codeData)}
+                    parseData={() => {alert('开发中')}}
                 />
                 <div className="flex">
                     <CTree

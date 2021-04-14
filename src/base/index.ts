@@ -280,7 +280,6 @@ export function objToYaml(obj: any): string {
     for (const key in obj) {
         if (!obj.hasOwnProperty(key)) continue
         str += `---\n`
-        obj[key].kind = key.split('-')[0]
         str += jsyaml.safeDump(sortObj(obj[key]))
     }
     str += str !== '' ? '---' : ''

@@ -609,9 +609,11 @@ class CTree extends React.Component<any, any> {
             value: '',
             children: [],
         }
+        let expandedKeys = this.state.expandedKeys
+        expandedKeys.push(path)
         node.children.push(tNode)
         const data = updateTreeNodeByPath(path, this.state.data, node)
-        this.setState({data})
+        this.setState({data, expandedKeys})
     }
 
     /**

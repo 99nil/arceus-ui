@@ -11,7 +11,7 @@ import {
     updateTreeNodeByPath,
 } from "../base";
 import TextArea from "antd/lib/input/TextArea";
-import testdata from "../data/prometheusrule";
+import {InfoParamsType, tree} from "../api/resource";
 
 class CTree extends React.Component<any, any> {
 
@@ -22,24 +22,6 @@ class CTree extends React.Component<any, any> {
             data: [],
             expandedKeys: [],
         }
-    }
-
-    deepClone = (obj: any): any => {
-        let o: any = {}
-        if (typeof obj != "object") return obj
-        if (obj === null) return null
-        if (obj instanceof Array) {
-            o = [];
-            for (let i = 0, len = obj.length; i < len; i++) {
-                o.push(this.deepClone(obj[i]))
-            }
-        } else {
-            for (let j in obj) {
-                if (!obj.hasOwnProperty(j)) continue
-                o[j] = this.deepClone(obj[j])
-            }
-        }
-        return o;
     }
 
     /**
@@ -59,8 +41,9 @@ class CTree extends React.Component<any, any> {
         result._children = []
         let children = data.children
         if (data._children && data._children.length > 0) children = data._children
-        for (let vv of children) {
-            result._children.push(this.buildFullData(vv, prefix, cutPrefix))
+        for (let k in children) {
+            if (!children.hasOwnProperty(k)) continue
+            result._children.push(this.buildFullData(children[k], prefix, cutPrefix))
         }
         if (data.required && data.required.length > 0) {
             for (let vv of data.children) {
@@ -129,7 +112,11 @@ class CTree extends React.Component<any, any> {
      */
     convertToYaml = () => {
         if (this.props.buildYamlData) {
-            const data = this.parseTreeToObj(this.state.data)
+            let data: any[] = []
+            for (const v of this.state.data) {
+                const item = this.parseTreeToObj([v])
+                data.push(item)
+            }
             const yamlData = objToYaml(data)
             this.props.buildYamlData(yamlData)
         }
@@ -142,10 +129,15 @@ class CTree extends React.Component<any, any> {
      * @param version
      */
     generateResource = (group: string, kind: string, version: string) => {
-        const fullData = this.buildFullData(testdata)
-        console.log(fullData)
-        const data = [...this.state.data, fullData]
-        this.setState({data, expandedKeys: this.getExpandedKeys(data)})
+        const that = this
+        const params: InfoParamsType = {group, kind, version}
+        tree(params).then(function (result: any) {
+            const fullData = that.buildFullData(result)
+            console.log(fullData)
+            const data = [...that.state.data, fullData]
+            that.setState({data, expandedKeys: that.getExpandedKeys(data)})
+        })
+
     }
 
     /**

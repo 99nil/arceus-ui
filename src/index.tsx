@@ -5,6 +5,7 @@ import * as serviceWorker from './serviceWorker';
 import CTree from "./components/CTree";
 import {UnControlled as CodeMirror} from "react-codemirror2";
 import NavBar from "./components/NavBar";
+
 require('codemirror/mode/yaml/yaml')
 
 export default class App extends React.Component<any, any> {
@@ -34,7 +35,9 @@ export default class App extends React.Component<any, any> {
                     fold={() => this.state.cTreeRef.current.foldAll()}
                     unfold={() => this.state.cTreeRef.current.unfoldAll()}
                     buildData={() => this.state.cTreeRef.current.convertToYaml()}
-                    parseData={() => {alert('开发中')}}
+                    parseData={() => {
+                        alert('开发中')
+                    }}
                 />
                 <div className="flex">
                     <CTree
@@ -63,7 +66,7 @@ export default class App extends React.Component<any, any> {
     }
 }
 
-ReactDOM.render(<App />, document.getElementById('root'));
+ReactDOM.render(<App/>, document.getElementById('root'));
 
 // If you want your app to work offline and load faster, you can change
 // unregister() to register() below. Note this comes with some pitfalls.

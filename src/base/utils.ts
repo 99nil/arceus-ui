@@ -76,3 +76,25 @@ export function sortObj(obj: any): any {
     Object.keys(obj).sort().map((key: any) => newObj[key] = obj[key])
     return newObj
 }
+
+/**
+ * 对象深拷贝
+ * @param obj
+ */
+export  function deepClone(obj: any): any {
+    let o: any = {}
+    if (typeof obj != "object") return obj
+    if (obj === null) return null
+    if (obj instanceof Array) {
+        o = [];
+        for (let i = 0, len = obj.length; i < len; i++) {
+            o.push(deepClone(obj[i]))
+        }
+    } else {
+        for (let j in obj) {
+            if (!obj.hasOwnProperty(j)) continue
+            o[j] = deepClone(obj[j])
+        }
+    }
+    return o;
+}

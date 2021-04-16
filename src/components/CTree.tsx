@@ -71,38 +71,51 @@ class CTree extends React.Component<any, any> {
             result.key = prefix + '.' + result.key
         }
         // 构建Base Element元素标题
-        if ('array' === result.type) {
-            result.title = this.createAppendArrayNode(
-                result.key,
-                this.createMenuTitle(result.key, result)
-            )
-        } else if ('object' === result.type) {
-            // 对象节点，object string/string
-            if (result._children.length === 0) {
-                result.title = this.createAppendObjectNode(result.key, result)
-            } else {
-                result.title = this.createMenuTitle(result.key, result)
-            }
-        } else {
-            // 构建Select Element元素标题
-            if (result.enums && result.enums.length > 0) {
-                let options: ND[] = []
-                for (const v of result.enums) {
-                    options.push({
-                        name: v,
-                        desc: v,
-                    })
+        switch (result.type) {
+            case 'array':
+                result.title = this.createAppendArrayNode(
+                    result.key,
+                    this.createMenuTitle(result.key, result)
+                )
+                break
+            case 'object': // 对象节点，object string/string
+                if (result._children.length === 0) {
+                    result.title = this.createAppendObjectNode(result.key, result)
+                } else {
+                    result.title = this.createMenuTitle(result.key, result)
                 }
+                break
+            case 'boolean':
+                const options: ND[] = [
+                    {name: 'true', desc: 'true'},
+                    {name: 'false', desc: 'false'},
+                ]
                 result.title = this.createPrefixNode(
                     this.createMenuTitle(result.key, result),
                     this.createSelectNode(result.key, options, result.value)
                 )
-            } else {
-                result.title = this.createPrefixNode(
-                    this.createMenuTitle(result.key, result),
-                    this.createInputNode(result.key, result.value)
-                )
-            }
+                break
+            default:
+                // 构建Select Element元素标题
+                if (result.enums && result.enums.length > 0) {
+                    let options: ND[] = []
+                    for (const v of result.enums) {
+                        options.push({
+                            name: v,
+                            desc: v,
+                        })
+                    }
+                    result.title = this.createPrefixNode(
+                        this.createMenuTitle(result.key, result),
+                        this.createSelectNode(result.key, options, result.value)
+                    )
+                } else {
+                    result.title = this.createPrefixNode(
+                        this.createMenuTitle(result.key, result),
+                        this.createInputNode(result.key, result.value)
+                    )
+                }
+                break
         }
         return result
     }
@@ -132,6 +145,7 @@ class CTree extends React.Component<any, any> {
         const that = this
         const params: InfoParamsType = {group, kind, version}
         tree(params).then(function (result: any) {
+            console.log(result)
             const fullData = that.buildFullData(result)
             console.log(fullData)
             const data = [...that.state.data, fullData]
@@ -450,6 +464,7 @@ class CTree extends React.Component<any, any> {
         return <Popover
             content={tipContent}
             trigger="hover"
+            arrowPointAtCenter
             key={key}
         > {title} </Popover>
     }
@@ -462,6 +477,7 @@ class CTree extends React.Component<any, any> {
             className="ml2"
             type="primary"
             onClick={isArray ? this.removeObjItem : this.removeItem}
+
             style={{margin: '5px'}}
             danger
         > delete </Button>
@@ -504,6 +520,7 @@ class CTree extends React.Component<any, any> {
         return this.createTitle(<Popover
             trigger="click"
             content={<div style={{maxWidth: '500px'}}>{set}</div>}
+            arrowPointAtCenter
         > {source.name} </Popover>, desc)
     }
 

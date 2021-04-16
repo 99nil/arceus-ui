@@ -57,7 +57,7 @@ const requestWithExtend = extend({
     },
 });
 
-const host = "http://localhost:2638"
+const host = window.location.protocol + '//' + window.location.host
 
 /**
  * 封装一次request，使response可以统一校验后使用

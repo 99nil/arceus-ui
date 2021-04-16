@@ -534,6 +534,8 @@ class CTree extends React.Component<any, any> {
         // 获取选中节点
         const node = getTreeNodeByPath(path, this.state.data)
         if (!node) return
+        let expandedKeys = this.state.expandedKeys
+
         // 添加或移除子项
         const children = [...node.children]
         for (const s of node._children) {
@@ -545,7 +547,10 @@ class CTree extends React.Component<any, any> {
                         break
                     }
                 }
-                if (delStatus) children.push(s)
+                if (delStatus) {
+                    children.push(s)
+                    if (expandedKeys.indexOf(s.key) === -1) expandedKeys.push(s.key)
+                }
             }
             if (addSet.indexOf(s.name) > -1) {
                 let addIndex = -1
@@ -562,11 +567,10 @@ class CTree extends React.Component<any, any> {
         for (const v of children) cs.push(v.name)
         node.title = this.createMenuTitle(path, node, cs)
         node.children = children
-        console.log(node)
-
+        if (expandedKeys.indexOf(node.key) === -1) expandedKeys.push(node.key)
         // 更新选中节点
         const data = updateTreeNodeByPath(path, this.state.data, node)
-        this.setState({data})
+        this.setState({data, expandedKeys})
     }
 
     addItemFromMenu = (e: any) => {
@@ -594,8 +598,8 @@ class CTree extends React.Component<any, any> {
         let expandedKeys = this.state.expandedKeys
         if (tNode.type === 'object') {
             tNode = this.buildFullData(node._children[0], keyPath, path)
-            // TODO 需要去重
-            expandedKeys.push(node.key, tNode.key)
+            if (expandedKeys.indexOf(node.key) === -1) expandedKeys.push(node.key)
+            if (expandedKeys.indexOf(tNode.key) === -1) expandedKeys.push(tNode.key)
         }
         node.children.push(tNode)
         // 根据path更新tree
@@ -622,7 +626,7 @@ class CTree extends React.Component<any, any> {
             children: [],
         }
         let expandedKeys = this.state.expandedKeys
-        expandedKeys.push(path)
+        if (expandedKeys.indexOf(path) === -1) expandedKeys.push(path)
         node.children.push(tNode)
         const data = updateTreeNodeByPath(path, this.state.data, node)
         this.setState({data, expandedKeys})

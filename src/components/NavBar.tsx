@@ -66,7 +66,10 @@ class NavBar extends React.Component<any, any> {
      * 下载
      */
     downloadData = () => {
-        if (!this.props.data) message.error('无内容可下载')
+        if (!this.props.data) {
+            message.error('无内容可下载')
+            return
+        }
         const element = document.createElement('a');
         element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(this.props.data));
         const filename = randomString(6) + '.yml'

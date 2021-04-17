@@ -1,14 +1,13 @@
 import React from "react";
-import {Button, Input, Popover, Select, Tree} from "antd";
+import {Button, Input, message, Popover, Select, Tree} from "antd";
 import {MinusCircleOutlined, PlusCircleOutlined, PlusSquareOutlined} from '@ant-design/icons'
 import KindList from "./KindList";
 import {ArrayNode, ND, SourceNode, SourceType, TNode} from "../base/base";
 import {
-    getNodeByPathWithTree,
     getTreeNodeByPath,
     objToYaml,
     randomString,
-    updateTreeNodeByPath,
+    updateTreeNodeByPath, yamlToObjMulti,
 } from "../base";
 import TextArea from "antd/lib/input/TextArea";
 import {InfoParamsType, tree} from "../api/resource";
@@ -120,6 +119,130 @@ class CTree extends React.Component<any, any> {
         return result
     }
 
+    buildFullDataWithObj = (data: any, prefix: string = '', cutPrefix: string = '', obj: any = {}): any => {
+        if (prefix === '') prefix = randomString(6)
+        let result: any = {}
+        for (let k in data) {
+            if (!data.hasOwnProperty(k)) continue
+            result[k] = data[k]
+        }
+        result.children = []
+        result._children = []
+        let children = data.children
+        if (data._children && data._children.length > 0) children = data._children
+        for (let k in children) {
+            if (!children.hasOwnProperty(k)) continue
+            const v = children[k]
+            result._children.push(this.buildFullData(v, prefix, cutPrefix))
+
+            if (!obj || !obj.hasOwnProperty(v.name)) continue
+            result.children.push(this.buildFullDataWithObj(v, prefix, cutPrefix, obj[v.name]))
+        }
+
+        if (data.required && data.required.length > 0 && !obj) {
+            for (let vv of data.children) {
+                if (data.required.indexOf(vv.name) === -1) continue
+                let child = this.buildFullData(vv, prefix, cutPrefix)
+                child.stats = {
+                    isRequired: true,
+                    isEdit: true,
+                }
+                // 设置默认字段不允许编辑
+                if (['root.apiVersion', 'root.kind'].indexOf(child.key) !== -1) child.stats.isEdit = false
+                result.children.push(child)
+            }
+        }
+
+        // 添加节点状态
+        if (!result.stats) result.stats = {
+            isRequired: false,
+            isEdit: true,
+        }
+        // 重构节点唯一key
+        if (cutPrefix !== '') {
+            result.key = result.key.replace(cutPrefix, prefix)
+        } else {
+            result.key = prefix + '.' + result.key
+        }
+        // 构建Base Element元素标题
+        switch (result.type) {
+            case 'array':
+                result.title = this.createAppendArrayNode(
+                    result.key,
+                    this.createMenuTitle(result.key, result)
+                )
+                if (obj) {
+                    for (const k in obj) {
+                        if (!obj.hasOwnProperty(k)) continue
+                        // 默认构建普通数组节点
+                        const tNode = this.buildFullDataWithObj(
+                            result._children[0],
+                            result.key + '.' + k,
+                            result.key,
+                            obj[k]
+                        )
+                        result.children.push(tNode)
+                    }
+                }
+                break
+            case 'object': // 对象节点，object string/string
+                if (result._children.length > 0) {
+                    result.title = this.createMenuTitle(result.key, result)
+                    break
+                }
+                result.title = this.createAppendObjectNode(result.key, result)
+                if (obj) {
+                    for (const k in obj) {
+                        if (!obj.hasOwnProperty(k)) continue
+                        const key = result.key + '.' + randomString(6)
+                        result.children.push({
+                            key,
+                            name: k,
+                            title: this.createKVInputNode(key, k, obj[k]),
+                            type: SourceType.String,
+                            value: obj[k],
+                            children: [],
+                        })
+                    }
+                }
+                break
+            case 'boolean':
+                result.value = obj ? obj : result.value
+                const options: ND[] = [
+                    {name: 'false', desc: 'false'},
+                    {name: 'true', desc: 'true'},
+                ]
+                result.title = this.createPrefixNode(
+                    this.createMenuTitle(result.key, result),
+                    this.createSelectNode(result.key, options, result.value)
+                )
+                break
+            default:
+                result.value = obj ? obj : result.value
+                // 构建Select Element元素标题
+                if (result.enums && result.enums.length > 0) {
+                    let options: ND[] = []
+                    for (const v of result.enums) {
+                        options.push({
+                            name: v,
+                            desc: v,
+                        })
+                    }
+                    result.title = this.createPrefixNode(
+                        this.createMenuTitle(result.key, result),
+                        this.createSelectNode(result.key, options, result.value)
+                    )
+                } else {
+                    result.title = this.createPrefixNode(
+                        this.createMenuTitle(result.key, result),
+                        this.createInputNode(result.key, result.value)
+                    )
+                }
+                break
+        }
+        return result
+    }
+
     /**
      * 生成Yaml字符串
      */
@@ -136,6 +259,42 @@ class CTree extends React.Component<any, any> {
     }
 
     /**
+     * yaml生成树结构
+     * @param code
+     */
+    convertToTreeData = (code: string) => {
+        let obj: any
+        try {
+            obj = yamlToObjMulti(code)
+        } catch (e) {
+            message.error('Yaml格式错误')
+            return
+        }
+        const that = this
+        for (const k in obj) {
+            if (!obj.hasOwnProperty(k)) continue
+            const v = obj[k]
+            const apiVersion = v.apiVersion
+            const kind = v.kind
+            const versionData = apiVersion.split('/')
+            if (versionData.length === 1) versionData.unshift('core')
+            const params: InfoParamsType = {
+                kind,
+                group: versionData[0],
+                version: versionData[1],
+            }
+            tree(params).then(function (result: any) {
+                if (!result) return
+                const fullData = that.buildFullDataWithObj(result, '', '', v)
+                const data = [...that.state.data, fullData]
+                that.setState({data, expandedKeys: that.getExpandedKeys(data)})
+            }).catch(function (reason) {
+                console.log(reason)
+            })
+        }
+    }
+
+    /**
      * 获取kind对应的渲染数据，并向数据集中增加一组
      * @param group
      * @param kind
@@ -145,136 +304,11 @@ class CTree extends React.Component<any, any> {
         const that = this
         const params: InfoParamsType = {group, kind, version}
         tree(params).then(function (result: any) {
-            console.log(result)
+            if (!result) return
             const fullData = that.buildFullData(result)
-            console.log(fullData)
             const data = [...that.state.data, fullData]
             that.setState({data, expandedKeys: that.getExpandedKeys(data)})
         })
-
-    }
-
-    /**
-     * obj转tree
-     * @param obj
-     * @return TNode[]
-     */
-    parseObjToTreeData = (obj: any): TNode[] => {
-        let data: TNode[] = []
-        for (const key in obj) {
-            if (!obj.hasOwnProperty(key)) continue
-            const kind: string = key.split('-')[0]
-            const resource: SourceNode[] = this.state.kindRef.current.getResource(kind, 'tree')
-            let root: TNode = {
-                key,
-                name: key,
-                title: kind,
-                type: SourceType.Object,
-                value: '',
-                children: this.parseObjToTree(obj[key], resource, key)
-            }
-            data.push(root)
-        }
-        return data
-    }
-
-    /**
-     * obj根据resource转tree
-     * @param obj
-     * @param resource
-     * @param prefixKey
-     * @param path
-     * @param skipNode
-     * @return TNode[]
-     */
-    parseObjToTree = (obj: any, resource: SourceNode[], prefixKey: string, path: string = '', skipNode: boolean = false): TNode[] => {
-        /**
-         * 根据obj的key拼接成path，根据path获取resource的node信息
-         * 根据resource和path渲染tree
-         *   ->
-         */
-        let data: TNode[] = []
-        path = path === '' ? '' : path + '.'
-        for (const key in obj) {
-            if (!obj.hasOwnProperty(key)) continue
-            const val = obj[key]
-            const keyPath = path + key
-            const fullKey = prefixKey + '.' + keyPath
-            if (skipNode) {
-                let tNode: TNode = {
-                    key: fullKey,
-                    name: key,
-                    title: this.createKVInputNode(fullKey, key, val),
-                    type: SourceType.String,
-                    value: val,
-                    children: []
-                }
-                data.push(tNode)
-                continue
-            }
-            const node = getNodeByPathWithTree(keyPath, resource)
-            if (!node) continue
-            let tNode: TNode = {
-                key: fullKey,
-                name: node.name,
-                title: node.name,
-                type: node.type,
-                value: '',
-                children: []
-            }
-            switch (node.type) {
-                case SourceType.Object:
-                    // 如果不存在子节点
-                    if (node.items.length === 0) {
-                        tNode.title = this.createAppendObjectNode(fullKey, node)
-                        tNode.children = this.parseObjToTree(val, resource, prefixKey, keyPath, true)
-                    } else {
-                        tNode.title = this.createMenuTitle(fullKey, node)
-                        tNode.children = this.parseObjToTree(val, resource, prefixKey, keyPath)
-                    }
-                    break
-                case SourceType.Array:
-                    tNode.title = this.createAppendArrayNode(fullKey, this.createMenuTitle(fullKey, node))
-                    tNode.children = this.parseObjToTree(val, resource, prefixKey, keyPath)
-                    break
-                case SourceType.Boolean:
-                    if (node.selects.length === 0) node.selects = [
-                        {name: 'true', desc: 'true'},
-                        {name: 'false', desc: 'false'}
-                    ]
-                    tNode.title = this.createPrefixNode(
-                        this.createMenuTitle(fullKey, node),
-                        this.createSelectNode(fullKey, node.selects)
-                    )
-                    tNode.value = val === '' ? node.selects[0].name : val
-                    break
-                default:
-                    if (node.selects.length > 0) {
-                        if (val !== '') {
-                            for (const v of node.selects) {
-                                if (v.name === val) {
-                                    tNode.value = val
-                                    break
-                                }
-                            }
-                        }
-                        if (tNode.value === '') tNode.value = node.selects[0].name
-                        tNode.title = this.createPrefixNode(
-                            this.createMenuTitle(fullKey, node),
-                            this.createSelectNode(fullKey, node.selects, tNode.value)
-                        )
-                    } else {
-                        tNode.title = this.createPrefixNode(
-                            this.createMenuTitle(fullKey, node),
-                            this.createInputNode(fullKey, val)
-                        )
-                        tNode.value = val
-                    }
-                    break
-            }
-            data.push(tNode)
-        }
-        return data
     }
 
     /**
@@ -288,6 +322,7 @@ class CTree extends React.Component<any, any> {
             switch (v.type) {
                 case SourceType.Object:
                     obj[v.name] = this.parseTreeToObj(v.children)
+                    if (v.name === 'root') obj = obj[v.name]
                     break
                 case SourceType.Array:
                     let arr = []
@@ -650,7 +685,6 @@ class CTree extends React.Component<any, any> {
      */
     removeItem = (e: any) => {
         const path = e.target.getAttribute('data-path')
-        console.log(path)
         const node = getTreeNodeByPath(path, this.state.data)
         if (!node) return
         let data = updateTreeNodeByPath(path, this.state.data, null)

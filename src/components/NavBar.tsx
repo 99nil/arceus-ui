@@ -116,7 +116,7 @@ class NavBar extends React.Component<any, any> {
                             <CopyOutlined/>
                         </Button>
                     </Popover>
-                    <Popover trigger="hover" content="粘贴">
+                    <Popover trigger="hover" content="下载">
                         <Button className="ml2" type="primary" onClick={this.downloadData}>
                             <DownloadOutlined/>
                         </Button>

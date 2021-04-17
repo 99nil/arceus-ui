@@ -29,8 +29,9 @@ const codeMessage: { [code: number]: string } = {
 const errorHandler = (error: { response: Response, data: any }): Response => {
     const {response, data} = error;
     if (response && response.status) {
-        const errorText = data ? data : (codeMessage[response.status] || response.statusText);
+        const errorText = data && (typeof data === 'object' ? Object.keys(data).length > 0 : true) ? data : (codeMessage[response.status] || response.statusText);
         // const {status, url} = response;
+        console.log(errorText)
         notification.error({
             message: `操作失败`,
             description: errorText,
@@ -51,13 +52,12 @@ const requestWithExtend = extend({
     errorHandler, // 默认错误处理
     // credentials: 'include', // 默认请求是否带上cookie
     headers: {
-        //'Content-Type': 'application/json;charset=utf-8',
-        //'Content-Type': 'application/x-www-form-urlencoded',
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json;charset=utf-8',
     },
 });
 
 const host = window.location.protocol + '//' + window.location.host
+// const host = 'http://localhost:2638'
 
 /**
  * 封装一次request，使response可以统一校验后使用

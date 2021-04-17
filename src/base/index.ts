@@ -293,13 +293,13 @@ export function objToYaml(obj: any): string {
  */
 export function yamlToObjMulti(str: string): any {
     let obj: any = {}
+    // maybe object or array
     const arr = jsyaml.safeLoadAll(str)
     for (const item of arr) {
         if (!item) continue
         // 处理kind
         if (!item.hasOwnProperty('kind')) continue
         const key = item.kind + '-' + randomString(6)
-        delete item.kind
         obj[key] = item
     }
     return obj

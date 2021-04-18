@@ -8,6 +8,7 @@ class KindList extends React.Component<any, any> {
         super(props);
         this.state = {
             options: [],
+            customOptions: [],
         }
         this.getOptions()
     }
@@ -24,18 +25,31 @@ class KindList extends React.Component<any, any> {
 
     getOptions = () => {
         const that = this
-        list().then(function (result) {
+        list().then((result: any) => {
             that.setState({options: result})
+        })
+        list('custom').then((result: any) => {
+            that.setState({customOptions: result})
         })
     }
 
     render() {
-        return <Cascader
-            className="ml10"
-            options={this.state.options}
-            onChange={value => this.generateResource(value)}
-            changeOnSelect
-        />
+        return <div>
+            <Cascader
+                className="ml10"
+                placeholder="Base Resource Select"
+                options={this.state.options}
+                onChange={value => this.generateResource(value)}
+                changeOnSelect
+            /><br/>
+            <Cascader
+                className="ml10 mt5"
+                placeholder="Custom Resource Select"
+                options={this.state.customOptions}
+                onChange={value => this.generateResource(value)}
+                changeOnSelect
+            />
+        </div>
     }
 }
 

@@ -1,4 +1,4 @@
-import request from "../utils/request";
+import request, {host} from "../utils/request";
 
 export interface InfoParamsType {
     group: string;
@@ -6,8 +6,8 @@ export interface InfoParamsType {
     version: string;
 }
 
-export async function list(): Promise<any> {
-    return request('/resource/list')
+export async function list(type: string = ''): Promise<any> {
+    return request('/resource/list', {params: {type}})
 }
 
 export async function info(params: InfoParamsType): Promise<any> {
@@ -17,3 +17,5 @@ export async function info(params: InfoParamsType): Promise<any> {
 export async function tree(params: InfoParamsType): Promise<any> {
     return request('/resource/tree', {params})
 }
+
+export const uploadUrl = host + '/resource/upload'

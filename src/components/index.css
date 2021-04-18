@@ -63,6 +63,10 @@ ul, li {
     margin-top: 1px
 }
 
+.mt5 {
+    margin-top: 5px;
+}
+
 .mt20 {
     margin-top: 20px;
 }
@@ -113,4 +117,8 @@ ul.manor {
     border: 1px solid #ccc;
     margin: 5px 0;
     padding: 5px
+}
+
+.inline {
+    display: inline-block;
 }

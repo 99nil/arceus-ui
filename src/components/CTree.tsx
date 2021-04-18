@@ -2,7 +2,7 @@ import React from "react";
 import {Button, Input, message, Popover, Select, Tree} from "antd";
 import {MinusCircleOutlined, PlusCircleOutlined, PlusSquareOutlined} from '@ant-design/icons'
 import KindList from "./KindList";
-import {ArrayNode, ND, SourceNode, SourceType, TNode} from "../base/base";
+import {ArrayNode, ND, SourceType, TNode} from "../base/base";
 import {
     getTreeNodeByPath,
     objToYaml,
@@ -344,7 +344,7 @@ class CTree extends React.Component<any, any> {
     }
 
     // 添加text节点
-    createTextNode = (path: string, source: SourceNode) => {
+    createTextNode = (path: string, source: any) => {
         return <TextArea data-path={path} onChange={this.changeInputValue} defaultValue={source.value}/>
     }
 
@@ -456,7 +456,7 @@ class CTree extends React.Component<any, any> {
      * @param source
      * @return React.ReactNode
      */
-    createAppendObjectNode = (path: string, source: SourceNode) => {
+    createAppendObjectNode = (path: string, source: any) => {
         return (
             <div className="flex">
                 <span className="f1">{this.createMenuTitle(path, source)}</span>

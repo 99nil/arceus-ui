@@ -1,5 +1,5 @@
 import React from "react";
-import {message, Affix, Button, Popover, Drawer} from "antd";
+import {message, Affix, Button, Popover, Drawer, Upload} from "antd";
 import {
     PlusSquareOutlined,
     MinusSquareOutlined,
@@ -7,10 +7,26 @@ import {
     DownloadOutlined,
     DoubleLeftOutlined,
     DoubleRightOutlined,
-    SettingOutlined
+    SettingOutlined,
+    UploadOutlined
 } from '@ant-design/icons'
 import './index.css'
 import {randomString} from "../base";
+import {uploadUrl} from "../api/resource";
+
+const props = {
+    name: 'file',
+    action: uploadUrl,
+    showUploadList: false,
+    maxCount: 1,
+    onChange(info: any) {
+        if (info.file.status === 'done') {
+            message.success(`${info.file.name} file uploaded successfully`);
+        } else if (info.file.status === 'error') {
+            message.error(`${info.file.name} file upload failed.`);
+        }
+    },
+};
 
 class NavBar extends React.Component<any, any> {
 
@@ -94,6 +110,11 @@ class NavBar extends React.Component<any, any> {
         return (<>
             <Affix offsetTop={this.state.top}>
                 <div className="navBar">
+                    <Popover trigger="hover" content="设置">
+                        <Button className="ml2" type="primary" onClick={this.configOpen}>
+                            <SettingOutlined/>
+                        </Button>
+                    </Popover>
                     <Popover trigger="hover" content="折叠全部">
                         <Button className="ml2" type="primary" onClick={this.fold}>
                             <PlusSquareOutlined/>
@@ -124,10 +145,12 @@ class NavBar extends React.Component<any, any> {
                             <DownloadOutlined/>
                         </Button>
                     </Popover>
-                    <Popover trigger="hover" content="设置">
-                        <Button className="ml2" type="primary" onClick={this.configOpen}>
-                            <SettingOutlined/>
-                        </Button>
+                    <Popover trigger="hover" content="上传资源">
+                        <Upload className="ml2 inline" {...props}>
+                            <Button type="primary">
+                                <UploadOutlined/>
+                            </Button>
+                        </Upload>
                     </Popover>
                 </div>
             </Affix>

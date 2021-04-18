@@ -1,99 +1,5 @@
-import {ArrayNode, Source, SourceNode, SourceType, TNode} from "./base";
+import {TNode} from "./base";
 import jsyaml from "js-yaml";
-
-/**
- * 节点数据转object
- * @param nodes
- * @return any
- */
-export function parseNodesToObj(nodes: SourceNode[]): any {
-    let obj: any = {}
-    for (const v of nodes) {
-        switch (v.type) {
-            case SourceType.Object:
-                obj[v.name] = parseNodesToObj(v.items)
-                break
-            case SourceType.Array:
-                obj[v.name] = []
-                break
-            default:
-                obj[v.name] = v.value
-                break
-        }
-    }
-    return obj
-}
-
-/**
- * 根据初始结构集补全初始结构集缺失数据
- * @param sources
- * @return BaseStruct[]
- */
-export function sourceToNodeSet(sources: Source[]): SourceNode[] {
-    let full: SourceNode[] = []
-    for (const v of sources) {
-        v.items = v.items || []
-        if (v.items.length > 0 && !v.type) {
-            v.type = SourceType.Object
-        }
-        full.push({
-            name: v.name,
-            title: v.title,
-            desc: v.desc,
-            value: v.value || '',
-            must: v.must || false,
-            type: v.type || SourceType.String,
-            selects: v.selects || [],
-            checked: v.checked || [],
-            items: sourceToNodeSet(v.items),
-        })
-    }
-    return full
-}
-
-/**
- * 根据初始结构补全初始结构缺失数据
- * @param source
- * @return SourceNode
- */
-export function sourceToNode(source: Source): SourceNode {
-    return {
-        name: source.name,
-        title: source.title,
-        desc: source.desc,
-        value: source.value || '',
-        must: source.must || false,
-        type: source.type || SourceType.String,
-        selects: source.selects || [],
-        checked: source.checked || [],
-        items: sourceToNodeSet(source.items || []),
-    }
-}
-
-/**
- * 根据节点路径获取节点信息
- * @param path
- * @param nodes
- * @return SourceNode | null
- */
-export function getNodeByPath(path: string, nodes: SourceNode[]): SourceNode | null {
-    const paths = path.split('.')
-    let node: SourceNode | null = null
-    for (const v of paths) {
-        // 过滤数组key，非数字会返回NaN
-        if (parseFloat(v) >= 0) continue
-        node = null
-        for (const item of nodes) {
-            if (item.name === v) {
-                node = item
-                break
-            }
-        }
-        if (!node) break
-        nodes = node.items
-    }
-    return node
-}
 
 /**
  * 根据path获取Object
@@ -181,55 +87,25 @@ function sortObj(obj: any): any {
 }
 
 /**
- * 根据初始结构集补全树结构集缺失数据
- * @param sources
- * @return SourceNode[]
+ * 对象深拷贝
+ * @param obj
  */
-export function nodeSetToTreeNodeSet(sources: SourceNode[]): SourceNode[] {
-    let full: SourceNode[] = []
-    for (const v of sources) {
-        const node = {...v}
-        if (node.type === SourceType.Array) {
-            const arrSource: Source = {
-                name: ArrayNode,
-                desc: '数组节点',
-                title: ArrayNode,
-                must: true,
-            }
-            if (node.items.length > 0) {
-                arrSource.type = SourceType.Object
-                arrSource.items = nodeSetToTreeNodeSet(node.items)
-            }
-            node.items = [sourceToNode(arrSource)]
-        } else {
-            node.items = nodeSetToTreeNodeSet(node.items)
+export function deepClone(obj: any): any {
+    let o: any = {}
+    if (typeof obj != "object") return obj
+    if (obj === null) return null
+    if (obj instanceof Array) {
+        o = [];
+        for (let i = 0, len = obj.length; i < len; i++) {
+            o.push(deepClone(obj[i]))
         }
-        full.push(node)
-    }
-    return full
-}
-
-export function getNodeByPathWithTree(path: string, nodes: SourceNode[]): SourceNode | null {
-    const paths = path.split('.')
-    let node: SourceNode | null = null
-    for (const v of paths) {
-        node = null
-        // 过滤数组key，非数字会返回NaN
-        const index = parseFloat(v)
-        if (index >= 0) {
-            node = nodes[0]
-        } else {
-            for (const item of nodes) {
-                if (item.name === v) {
-                    node = item
-                    break
-                }
-            }
+    } else {
+        for (let j in obj) {
+            if (!obj.hasOwnProperty(j)) continue
+            o[j] = deepClone(obj[j])
         }
-        if (!node) break
-        nodes = node.items
     }
-    return node
+    return o;
 }
 
 /**

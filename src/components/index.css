@@ -43,6 +43,11 @@ ul, li {
     float: right;
 }
 
+.h35 {
+    min-height: 35px !important;
+    height: 35px;
+}
+
 .ml2 {
     margin-left: 2px
 }

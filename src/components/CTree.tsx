@@ -383,7 +383,7 @@ class CTree extends React.Component<any, any> {
      * @return React.ReactNode
      */
     createInputNode = (path: string, value: string = '') => {
-        return <Input data-path={path} onChange={this.changeInputValue} defaultValue={value}/>
+        return <TextArea style={{height: '35px', minHeight: '35px'}} data-path={path} onChange={this.changeInputValue} defaultValue={value}/>
     }
 
     /**

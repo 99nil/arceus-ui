@@ -343,11 +343,6 @@ class CTree extends React.Component<any, any> {
         return obj
     }
 
-    // 添加text节点
-    createTextNode = (path: string, source: any) => {
-        return <TextArea data-path={path} onChange={this.changeInputValue} defaultValue={source.value}/>
-    }
-
     /**
      * 添加select节点
      * @param selectData
@@ -383,7 +378,12 @@ class CTree extends React.Component<any, any> {
      * @return React.ReactNode
      */
     createInputNode = (path: string, value: string = '') => {
-        return <TextArea style={{height: '35px', minHeight: '35px'}} data-path={path} onChange={this.changeInputValue} defaultValue={value}/>
+        return <TextArea
+            style={{height: '35px', minHeight: '35px'}}
+            data-path={path}
+            onChange={this.changeInputValue}
+            defaultValue={value}
+        />
     }
 
     /**
@@ -609,8 +609,8 @@ class CTree extends React.Component<any, any> {
     }
 
     addItemFromMenu = (e: any) => {
-        const path = e.target.getAttribute('data-path')
-        const name = e.target.getAttribute('data-name')
+        const path = e.currentTarget.getAttribute('data-path')
+        const name = e.currentTarget.getAttribute('data-name')
         this.syncItemMenu(path, [], [name])
     }
 
@@ -684,7 +684,7 @@ class CTree extends React.Component<any, any> {
      * @param e
      */
     removeItem = (e: any) => {
-        const path = e.target.getAttribute('data-path')
+        const path = e.currentTarget.getAttribute('data-path')
         const node = getTreeNodeByPath(path, this.state.data)
         if (!node) return
         let data = updateTreeNodeByPath(path, this.state.data, null)
@@ -716,8 +716,8 @@ class CTree extends React.Component<any, any> {
      * @param isVal
      */
     changeInputValue = (e: any, isVal: boolean = true) => {
-        const path = e.target.getAttribute('data-path')
-        const value = e.target.value
+        const path = e.currentTarget.getAttribute('data-path')
+        const value = e.currentTarget.value
         const node = getTreeNodeByPath(path, this.state.data)
         if (!node) return
         isVal ? node.value = value : node.name = value

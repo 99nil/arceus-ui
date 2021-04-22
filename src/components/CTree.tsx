@@ -361,7 +361,6 @@ class CTree extends React.Component<any, any> {
                         if (va.type === SourceType.Object) {
                             if (va.children.length > 0) arr.push(this.parseTreeToObj(va.children))
                         } else {
-                            console.log(va.name, va.value)
                             if (va.value !== '') arr.push(convertValueByType(va.value, va.type))
                         }
                     }
@@ -748,8 +747,6 @@ class CTree extends React.Component<any, any> {
     changeInputValue = (e: any, isVal: boolean = true) => {
         const path = e.currentTarget.getAttribute('data-path')
         const value = e.currentTarget.value
-        console.log(path, value)
-        // TODO 纯数组节点时，无法拿到节点
         const node = getTreeNodeByPath(path, this.state.data)
         if (!node) return
         isVal ? node.value = value : node.name = value

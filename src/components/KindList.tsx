@@ -1,6 +1,11 @@
 import React from "react";
 import {Cascader} from 'antd';
 import {list} from "../api/resource";
+import {CascaderOptionType} from "antd/lib/cascader";
+
+function filter(inputValue:string, path:CascaderOptionType[]) {
+    return path.some((option:any) => option.label.toLowerCase().indexOf(inputValue.toLowerCase()) > -1);
+}
 
 class KindList extends React.Component<any, any> {
 
@@ -38,15 +43,17 @@ class KindList extends React.Component<any, any> {
             <Cascader
                 className="ml10"
                 placeholder="Base Resource Select"
-                options={this.state.options}
+                options={this.state.options || []}
                 onChange={value => this.generateResource(value)}
+                showSearch={{filter, matchInputWidth: false}}
                 changeOnSelect
             /><br/>
             <Cascader
                 className="ml10 mt5"
                 placeholder="Custom Resource Select"
-                options={this.state.customOptions}
+                options={this.state.customOptions || []}
                 onChange={value => this.generateResource(value)}
+                showSearch={{filter, matchInputWidth: false}}
                 changeOnSelect
             />
         </div>

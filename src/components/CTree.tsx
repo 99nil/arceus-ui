@@ -1,6 +1,6 @@
 import React from "react";
-import {Button, Input, message, Popover, Select, Tree} from "antd";
-import {MinusCircleOutlined, PlusCircleOutlined, PlusSquareOutlined} from '@ant-design/icons'
+import {Button, Input, message, Popover, Select, Tree, Modal} from "antd";
+import {MinusCircleOutlined, PlusCircleOutlined, PlusSquareOutlined, ExclamationCircleOutlined} from '@ant-design/icons'
 import KindList from "./KindList";
 import {ArrayNode, ND, SourceType, TNode} from "../base/base";
 import {
@@ -9,8 +9,9 @@ import {
     randomString,
     updateTreeNodeByPath, yamlToObjMulti,
 } from "../base";
-import TextArea from "antd/lib/input/TextArea";
 import {InfoParamsType, tree} from "../api/resource";
+import TextArea from "antd/lib/input/TextArea";
+const { confirm } = Modal;
 
 class CTree extends React.Component<any, any> {
 
@@ -258,6 +259,20 @@ class CTree extends React.Component<any, any> {
         }
     }
 
+    showParseConfirm = (fn: any) => {
+        confirm({
+            title: 'Do you Want to parse these items?',
+            icon: <ExclamationCircleOutlined />,
+            content: 'Note: it will cover the original target.',
+            onOk() {
+               fn()
+            },
+            onCancel() {
+                // console.log('Cancel');
+            },
+        });
+    }
+
     /**
      * yaml生成树结构
      * @param code
@@ -271,27 +286,30 @@ class CTree extends React.Component<any, any> {
             return
         }
         const that = this
-        for (const k in obj) {
-            if (!obj.hasOwnProperty(k)) continue
-            const v = obj[k]
-            const apiVersion = v.apiVersion
-            const kind = v.kind
-            const versionData = apiVersion.split('/')
-            if (versionData.length === 1) versionData.unshift('core')
-            const params: InfoParamsType = {
-                kind,
-                group: versionData[0],
-                version: versionData[1],
+        this.showParseConfirm(() => {
+            for (const k in obj) {
+                if (!obj.hasOwnProperty(k)) continue
+                const v = obj[k]
+                const apiVersion = v.apiVersion
+                const kind = v.kind
+                const versionData = apiVersion.split('/')
+                if (versionData.length === 1) versionData.unshift('core')
+                const params: InfoParamsType = {
+                    kind,
+                    group: versionData[0],
+                    version: versionData[1],
+                }
+                that.setState({data: []})
+                tree(params).then(function (result: any) {
+                    if (!result) return
+                    const fullData = that.buildFullDataWithObj(result, '', '', v)
+                    const data = [...that.state.data, fullData]
+                    that.setState({data, expandedKeys: that.getExpandedKeys(data)})
+                }).catch(function (reason) {
+                    console.log(reason)
+                })
             }
-            tree(params).then(function (result: any) {
-                if (!result) return
-                const fullData = that.buildFullDataWithObj(result, '', '', v)
-                const data = [...that.state.data, fullData]
-                that.setState({data, expandedKeys: that.getExpandedKeys(data)})
-            }).catch(function (reason) {
-                console.log(reason)
-            })
-        }
+        })
     }
 
     /**

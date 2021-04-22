@@ -4,6 +4,7 @@ import {MinusCircleOutlined, PlusCircleOutlined, PlusSquareOutlined, Exclamation
 import KindList from "./KindList";
 import {ArrayNode, ND, SourceType, TNode} from "../base/base";
 import {
+    convertValueByType,
     getTreeNodeByPath,
     objToYaml,
     randomString,
@@ -11,7 +12,8 @@ import {
 } from "../base";
 import {InfoParamsType, tree} from "../api/resource";
 import TextArea from "antd/lib/input/TextArea";
-const { confirm } = Modal;
+
+const {confirm} = Modal;
 
 class CTree extends React.Component<any, any> {
 
@@ -120,6 +122,13 @@ class CTree extends React.Component<any, any> {
         return result
     }
 
+    /**
+     * 根据obj值构建完整数据结构
+     * @param data
+     * @param prefix
+     * @param cutPrefix
+     * @param obj
+     */
     buildFullDataWithObj = (data: any, prefix: string = '', cutPrefix: string = '', obj: any = {}): any => {
         if (prefix === '') prefix = randomString(6)
         let result: any = {}
@@ -259,13 +268,17 @@ class CTree extends React.Component<any, any> {
         }
     }
 
+    /**
+     * 解析操作 展示提示框
+     * @param fn
+     */
     showParseConfirm = (fn: any) => {
         confirm({
             title: 'Do you Want to parse these items?',
-            icon: <ExclamationCircleOutlined />,
+            icon: <ExclamationCircleOutlined/>,
             content: 'Note: it will cover the original target.',
             onOk() {
-               fn()
+                fn()
             },
             onCancel() {
                 // console.log('Cancel');
@@ -348,13 +361,14 @@ class CTree extends React.Component<any, any> {
                         if (va.type === SourceType.Object) {
                             if (va.children.length > 0) arr.push(this.parseTreeToObj(va.children))
                         } else {
-                            if (va.value !== '') arr.push(va.value)
+                            console.log(va.name, va.value)
+                            if (va.value !== '') arr.push(convertValueByType(va.value, va.type))
                         }
                     }
                     obj[v.name] = arr
                     break
                 default:
-                    if (v.name !== '') obj[v.name] = v.value
+                    if (v.name !== '') obj[v.name] = convertValueByType(v.value, v.type)
                     break
             }
         }
@@ -645,12 +659,10 @@ class CTree extends React.Component<any, any> {
         const nodeChildNum = node.children.length
         // 默认构建普通数组节点
         const keyPath = path + '.' + nodeChildNum
-        let tNode = {...node._children[0]}
-        tNode.key = nodeChildNum
         // 数组节点添加需要重新构造添加后的所有子项key
+        const tNode = this.buildFullData(node._children[0], keyPath, path)
         let expandedKeys = this.state.expandedKeys
         if (tNode.type === 'object') {
-            tNode = this.buildFullData(node._children[0], keyPath, path)
             if (expandedKeys.indexOf(node.key) === -1) expandedKeys.push(node.key)
             if (expandedKeys.indexOf(tNode.key) === -1) expandedKeys.push(tNode.key)
         }
@@ -736,6 +748,8 @@ class CTree extends React.Component<any, any> {
     changeInputValue = (e: any, isVal: boolean = true) => {
         const path = e.currentTarget.getAttribute('data-path')
         const value = e.currentTarget.value
+        console.log(path, value)
+        // TODO 纯数组节点时，无法拿到节点
         const node = getTreeNodeByPath(path, this.state.data)
         if (!node) return
         isVal ? node.value = value : node.name = value

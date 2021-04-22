@@ -1,4 +1,4 @@
-import {TNode} from "./base";
+import {SourceType, TNode} from "./base";
 import jsyaml from "js-yaml";
 
 /**
@@ -62,6 +62,22 @@ export function updateObjByPath(obj: any, paths: string[], value: any): any {
  */
 export function strToLowerCase(str: string): string {
     return str.replace(str[0], str[0].toLowerCase())
+}
+
+/**
+ * 根据类型修改值
+ * @param val
+ * @param type
+ */
+export function convertValueByType(val: any, type: SourceType): any {
+    switch (type) {
+        case SourceType.Integer:
+            return parseInt(val)
+        case SourceType.Number:
+            return parseFloat(val)
+        default:
+            return val
+    }
 }
 
 /**

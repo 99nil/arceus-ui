@@ -8,6 +8,7 @@ export enum SourceType {
     Boolean = 'boolean',    // 布尔
     Object = 'object',      // 对象
     Array = 'array',        // 数组
+    Integer = 'integer',    // 整型
 }
 
 export interface ND {

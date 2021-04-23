@@ -561,7 +561,8 @@ class CTree extends React.Component<any, any> {
         let desc = ''
         if (source.descs && source.descs.length > 0) desc = source.descs[0].desc
         let notExistChildren = []
-        for (const item of source.children) childs.push(item.name)
+        if (!childs || childs.length === 0)
+            for (const item of source.children) childs.push(item.name)
         for (const item of source._children) if (childs.indexOf(item.name) === -1) notExistChildren.push(item)
         // 如果子项都渲染过并且为required节点， 则直接返回
         if (notExistChildren.length === 0 && source.stats.isRequired) return this.createTitle(source.name, desc)
@@ -581,8 +582,8 @@ class CTree extends React.Component<any, any> {
             > {child.name} </Button>, desc, index)
         })
         // 不是required节点或者数组节点，构建基础菜单
-        if (!source.stats.isRequired) set.unshift(this.createDeleteMenu(path, source.type === 'array'))
-        if (source.type === 'array') set = [this.createDeleteMenu(path, source.type === 'array')]
+        if (!source.stats.isRequired) set.unshift(this.createDeleteMenu(path, source.type === SourceType.Array))
+        if (source.type === SourceType.Array) set = [this.createDeleteMenu(path, source.type === SourceType.Array)]
         return this.createTitle(<Popover
             trigger="click"
             content={<div style={{maxWidth: '500px'}}>{set}</div>}

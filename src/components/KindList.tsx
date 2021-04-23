@@ -4,6 +4,7 @@ import {list} from "../api/resource";
 import {CascaderOptionType} from "antd/lib/cascader";
 
 function filter(inputValue:string, path:CascaderOptionType[]) {
+    if (path.length !== 3) return false
     return path.some((option:any) => option.label.toLowerCase().indexOf(inputValue.toLowerCase()) > -1);
 }
 

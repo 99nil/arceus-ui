@@ -18,4 +18,6 @@ export async function tree(params: InfoParamsType): Promise<any> {
     return request('/resource/tree', {params})
 }
 
-export const uploadUrl = host + '/resource/upload'
+export const uploadURL = host + '/resource/upload'
+
+export const generateURL = host + '/resource/generate'

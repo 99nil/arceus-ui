@@ -7,26 +7,44 @@ import {
     DownloadOutlined,
     DoubleLeftOutlined,
     DoubleRightOutlined,
-    SettingOutlined,
-    UploadOutlined
+    SettingOutlined
 } from '@ant-design/icons'
 import './index.css'
-import {randomString} from "../base";
-import {uploadUrl} from "../api/resource";
+import {downloadData} from "../base";
+import {generateURL, uploadURL} from "../api/resource";
 
-const props = {
+const uploadProps = {
     name: 'file',
-    action: uploadUrl,
+    action: uploadURL,
     showUploadList: false,
     maxCount: 1,
     onChange(info: any) {
         if (info.file.status === 'done') {
-            message.success(`${info.file.name} file uploaded successfully`);
+            message.success(`${info.file.name} file uploaded successfully`)
         } else if (info.file.status === 'error') {
-            message.error(`${info.file.name} file upload failed.`);
+            message.error(`${info.file.name} file upload failed.`)
         }
     },
 };
+
+const generateProps = {
+    name: 'file',
+    action: generateURL,
+    showUploadList: false,
+    maxCount: 1,
+    onChange(info: any) {
+        if (info.file.status === 'error') {
+            message.error(`${info.file.name} file parse failed: `, info.file.response)
+            return
+        }
+        if (info.file.status === 'done') {
+            const data = info.file.response
+            downloadData(data)
+            message.success(`Custom Resource Definition is downloaded.`)
+            return
+        }
+    },
+}
 
 class NavBar extends React.Component<any, any> {
 
@@ -86,14 +104,7 @@ class NavBar extends React.Component<any, any> {
             message.error('无内容可下载')
             return
         }
-        const element = document.createElement('a');
-        element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(this.props.data));
-        const filename = randomString(6) + '.yml'
-        element.setAttribute('download', filename);
-        element.style.display = 'none';
-        document.body.appendChild(element);
-        element.click();
-        document.body.removeChild(element);
+        downloadData(this.props.data)
     }
 
     /**
@@ -145,13 +156,6 @@ class NavBar extends React.Component<any, any> {
                             <DownloadOutlined/>
                         </Button>
                     </Popover>
-                    <Popover trigger="hover" content="上传资源">
-                        <Upload className="ml2 inline" {...props}>
-                            <Button type="primary">
-                                <UploadOutlined/>
-                            </Button>
-                        </Upload>
-                    </Popover>
                 </div>
             </Affix>
             <Drawer
@@ -161,7 +165,17 @@ class NavBar extends React.Component<any, any> {
                 visible={this.state.configVisible}
                 onClose={this.configClose}
             >
-                <p>敬请期待</p>
+                <p>更多内容，敬请期待</p>
+                <Upload {...generateProps}>
+                    <Button type="primary" block>
+                        资源定义生成
+                    </Button>
+                </Upload>
+                <Upload {...uploadProps}>
+                    <Button type="primary" block>
+                        资源上传解析
+                    </Button>
+                </Upload>
             </Drawer>
         </>);
     }

@@ -1,5 +1,6 @@
 import {SourceType, TNode} from "./base";
 import jsyaml from "js-yaml";
+import {message} from "antd";
 
 /**
  * 根据path获取Object
@@ -195,4 +196,19 @@ export function yamlToObjMulti(str: string): any {
         obj[key] = item
     }
     return obj
+}
+
+export function downloadData(data: any) {
+    if (!data) {
+        message.error('无内容可下载')
+        return
+    }
+    const element = document.createElement('a');
+    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(data));
+    const filename = randomString(6) + '.yml'
+    element.setAttribute('download', filename);
+    element.style.display = 'none';
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
 }

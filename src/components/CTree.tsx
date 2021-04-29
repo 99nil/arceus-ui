@@ -89,9 +89,10 @@ class CTree extends React.Component<any, any> {
                 break
             case 'boolean':
                 const options: ND[] = [
-                    {name: 'true', desc: 'true'},
                     {name: 'false', desc: 'false'},
+                    {name: 'true', desc: 'true'},
                 ]
+                if (result.value === '') result.value = options[0].name
                 result.title = this.createPrefixNode(
                     this.createMenuTitle(result.key, result),
                     this.createSelectNode(result.key, options, result.value)
@@ -107,6 +108,7 @@ class CTree extends React.Component<any, any> {
                             desc: v,
                         })
                     }
+                    if (result.value === '' && options.length > 0) result.value = options[0].name
                     result.title = this.createPrefixNode(
                         this.createMenuTitle(result.key, result),
                         this.createSelectNode(result.key, options, result.value)
@@ -217,18 +219,19 @@ class CTree extends React.Component<any, any> {
                 }
                 break
             case 'boolean':
-                result.value = obj ? obj : result.value
+                result.value = obj ? obj.toString() : result.value
                 const options: ND[] = [
                     {name: 'false', desc: 'false'},
                     {name: 'true', desc: 'true'},
                 ]
+                if (result.value === '') result.value = options[0].name
                 result.title = this.createPrefixNode(
                     this.createMenuTitle(result.key, result),
                     this.createSelectNode(result.key, options, result.value)
                 )
                 break
             default:
-                result.value = obj ? obj : result.value
+                result.value = obj ? obj.toString() : result.value
                 // 构建Select Element元素标题
                 if (result.enums && result.enums.length > 0) {
                     let options: ND[] = []
@@ -238,6 +241,7 @@ class CTree extends React.Component<any, any> {
                             desc: v,
                         })
                     }
+                    if (result.value === '' && options.length > 0) result.value = options[0].name
                     result.title = this.createPrefixNode(
                         this.createMenuTitle(result.key, result),
                         this.createSelectNode(result.key, options, result.value)

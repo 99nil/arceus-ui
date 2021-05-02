@@ -182,6 +182,15 @@ export function objToYaml(obj: any): string {
 /**
  * yaml转obj
  * @param str
+ */
+export function yamlToObj(str: string): any {
+    const obj = jsyaml.safeLoad(str)
+    return obj || {}
+}
+
+/**
+ * yaml转obj
+ * @param str
  * @return any
  */
 export function yamlToObjMulti(str: string): any {

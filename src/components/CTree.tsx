@@ -8,7 +8,7 @@ import {
     getTreeNodeByPath,
     objToYaml,
     randomString,
-    updateTreeNodeByPath, yamlToObjMulti,
+    updateTreeNodeByPath, yamlToObj, yamlToObjMulti,
 } from "../base";
 import {InfoParamsType, tree} from "../api/resource";
 import TextArea from "antd/lib/input/TextArea";
@@ -344,6 +344,18 @@ class CTree extends React.Component<any, any> {
             const data = [...that.state.data, fullData]
             that.setState({data, expandedKeys: that.getExpandedKeys(data)})
         })
+    }
+
+    /**
+     * 根据资源结构和资源内容渲染数据，并向数据集中增加一组
+     * @param current
+     * @param yamlStr
+     */
+    generateWithObjAndData = (current: any, yamlStr: string) => {
+        const obj = yamlToObj(yamlStr)
+        const fullData = this.buildFullDataWithObj(current, '', '', obj)
+        const data = [...this.state.data, fullData]
+        this.setState({data, expandedKeys: this.getExpandedKeys(data)})
     }
 
     /**
@@ -809,6 +821,7 @@ class CTree extends React.Component<any, any> {
                 <KindList
                     ref={this.state.kindRef}
                     generateResource={this.generateResource}
+                    generateWithObjAndData={this.generateWithObjAndData}
                 />
                 <Tree
                     className="treeStyle"

@@ -67,8 +67,8 @@ const request = async (url: string, option: any = {}) => {
         getResponse: true,
         ...option,
         prefix: ''
-    });
-    return result.data;
-};
+    })
+    return result ? result.data : null
+}
 
 export default request;

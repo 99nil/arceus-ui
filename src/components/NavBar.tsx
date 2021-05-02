@@ -12,6 +12,7 @@ import {
 import './index.css'
 import {downloadData} from "../base";
 import {generateURL, uploadURL} from "../api/resource";
+import {createURL} from "../api/template";
 
 const uploadProps = {
     name: 'file',
@@ -41,6 +42,23 @@ const generateProps = {
             const data = info.file.response
             downloadData(data)
             message.success(`Custom Resource Definition is downloaded.`)
+            return
+        }
+    },
+}
+
+const templateProps = {
+    name: 'file',
+    action: createURL,
+    showUploadList: false,
+    maxCount: 1,
+    onChange(info: any) {
+        if (info.file.status === 'error') {
+            message.error(`${info.file.name} file upload failed: `, info.file.response)
+            return
+        }
+        if (info.file.status === 'done') {
+            message.success(`${info.file.name} file uploaded successfully`)
             return
         }
     },
@@ -167,13 +185,18 @@ class NavBar extends React.Component<any, any> {
             >
                 <p>更多内容，敬请期待</p>
                 <Upload {...generateProps}>
-                    <Button type="primary" block>
+                    <Button type="ghost" block>
                         资源定义生成
                     </Button>
                 </Upload>
                 <Upload {...uploadProps}>
                     <Button type="primary" block>
                         资源上传解析
+                    </Button>
+                </Upload>
+                <Upload {...templateProps}>
+                    <Button type="primary" block>
+                        模板添加
                     </Button>
                 </Upload>
             </Drawer>

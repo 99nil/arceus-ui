@@ -26,24 +26,22 @@ class KindList extends React.Component<any, any> {
      * @param value
      */
     generateResource = (value: any) => {
-        if (value.length !== 3) return
-        if (this.props.generateResource)
-            this.props.generateResource(value[0], value[1], value[2])
+        if (value.length !== 3 || !this.props.generateResource) return
+        this.props.generateResource(value[0], value[1], value[2])
     }
 
-    generateWithObjAndData = (value: any) => {
-        if (value.length !== 3) return
-        if (this.props.generateWithObjAndData)
-            templateInfo({
-                group: value[0],
-                kind: value[1],
-                version: value[2],
-            }).then((result: any) => {
-                if (!result) return
-                for (const v of result) {
-                    this.props.generateWithObjAndData(v.data, v.template)
-                }
-            })
+    convertToTreeData = (value: any) => {
+        if (value.length !== 3 || !this.props.convertToTreeData) return
+        templateInfo({
+            group: value[0],
+            kind: value[1],
+            version: value[2],
+        }).then((result: any) => {
+            if (!result || !result.spec || !result.spec.template) return
+            for (const v of result.spec.template) {
+                this.props.convertToTreeData(v.data, true)
+            }
+        })
     }
 
     getOptions = () => {
@@ -84,7 +82,7 @@ class KindList extends React.Component<any, any> {
                 className="ml10 mt5"
                 placeholder="Template Select"
                 options={this.state.templateOptions || []}
-                onChange={value => this.generateWithObjAndData(value)}
+                onChange={value => this.convertToTreeData(value)}
                 showSearch={{filter, matchInputWidth: false}}
                 changeOnSelect
             />

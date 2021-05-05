@@ -275,8 +275,13 @@ class CTree extends React.Component<any, any> {
     /**
      * 解析操作 展示提示框
      * @param fn
+     * @param cover
      */
-    showParseConfirm = (fn: any) => {
+    showParseConfirm = (fn: any, cover: boolean = false) => {
+        if (cover) {
+            fn()
+            return
+        }
         confirm({
             title: 'Do you Want to parse these items?',
             icon: <ExclamationCircleOutlined/>,
@@ -293,8 +298,9 @@ class CTree extends React.Component<any, any> {
     /**
      * yaml生成树结构
      * @param code
+     * @param cover
      */
-    convertToTreeData = (code: string) => {
+    convertToTreeData = (code: string, cover: boolean = false) => {
         let obj: any
         try {
             obj = yamlToObjMulti(code)
@@ -326,7 +332,7 @@ class CTree extends React.Component<any, any> {
                     console.log(reason)
                 })
             }
-        })
+        }, cover)
     }
 
     /**
@@ -344,18 +350,6 @@ class CTree extends React.Component<any, any> {
             const data = [...that.state.data, fullData]
             that.setState({data, expandedKeys: that.getExpandedKeys(data)})
         })
-    }
-
-    /**
-     * 根据资源结构和资源内容渲染数据，并向数据集中增加一组
-     * @param current
-     * @param yamlStr
-     */
-    generateWithObjAndData = (current: any, yamlStr: string) => {
-        const obj = yamlToObj(yamlStr)
-        const fullData = this.buildFullDataWithObj(current, '', '', obj)
-        const data = [...this.state.data, fullData]
-        this.setState({data, expandedKeys: this.getExpandedKeys(data)})
     }
 
     /**
@@ -821,7 +815,7 @@ class CTree extends React.Component<any, any> {
                 <KindList
                     ref={this.state.kindRef}
                     generateResource={this.generateResource}
-                    generateWithObjAndData={this.generateWithObjAndData}
+                    convertToTreeData={this.convertToTreeData}
                 />
                 <Tree
                     className="treeStyle"

@@ -8,7 +8,7 @@ import {
     getTreeNodeByPath,
     objToYaml,
     randomString,
-    updateTreeNodeByPath, yamlToObj, yamlToObjMulti,
+    updateTreeNodeByPath, yamlToObjMulti,
 } from "../base";
 import {InfoParamsType, tree} from "../api/resource";
 import TextArea from "antd/lib/input/TextArea";

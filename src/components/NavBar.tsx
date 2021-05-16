@@ -10,7 +10,7 @@ import {
     SettingOutlined
 } from '@ant-design/icons'
 import './index.css'
-import {downloadData} from "../base";
+import {copyData, downloadData} from "../base";
 import {generateURL, uploadURL} from "../api/resource";
 import {createURL} from "../api/template";
 
@@ -106,12 +106,10 @@ class NavBar extends React.Component<any, any> {
      * 复制
      */
     copyData = () => {
-        let text = document.createElement("textarea");    // 直接构建textarea
-        text.value = this.props.data                               // 设置内容
-        document.body.appendChild(text);                           // 添加临时实例
-        text.select();                                             // 选择实例内容
-        document.execCommand("Copy");                  // 执行复制
-        document.body.removeChild(text);                           // 删除临时实例
+        if (!this.props.data) {
+            message.error('复制失败，内容为空')
+        }
+        copyData(this.props.data)
     }
 
     /**

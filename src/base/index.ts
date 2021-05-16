@@ -1,22 +1,6 @@
-import {SourceType, TNode} from "./base";
+import {ArrayNode, SourceType, TNode} from "./base";
 import jsyaml from "js-yaml";
 import {message} from "antd";
-
-/**
- * 根据path获取Object
- * @param obj
- * @param paths
- * @return any
- */
-export function getObjByPath(obj: any, paths: string[]): any {
-    for (const v of paths) {
-        if (!obj.hasOwnProperty(v)) {
-            return null
-        }
-        obj = obj[v]
-    }
-    return obj
-}
 
 /**
  * 根据path更新Object
@@ -133,7 +117,8 @@ export function deepClone(obj: any): any {
  */
 export function getTreeNodeByPath(key: string, nodes: any[]): any {
     let node: any
-    for (const item of nodes) {
+    for (const k in nodes) {
+        const item = nodes[k]
         if (item.key === key) return item
         node = getTreeNodeByPath(key, item.children)
         if (node) return node
@@ -160,6 +145,70 @@ export function updateTreeNodeByPath(key: string, nodes: TNode[], value: TNode |
         newNodes.push(newNode)
     }
     return newNodes
+}
+
+/**
+ * 根据yaml数组内容及当前输入行 构建关键字key路径（yaml数组根据\n切割）
+ * @param yamlSet
+ * @param line
+ * @return string
+ */
+export function getPathByYamlData(yamlSet: string[], line: number): string {
+    let path: string = ''
+    const lineData = yamlSet[line]
+    const filterLineData = lineData.trimLeft()
+    const lineSpaceLen = lineData.length - filterLineData.length
+    if (lineSpaceLen < 2) {
+        // 顶级字段
+        return ''
+    }
+    // 判断当前行是否数组
+    let isArray: boolean = false
+    if (filterLineData.startsWith('- ')) isArray = true
+    // 删除编辑行
+    yamlSet.splice(line)
+    // 获取父级字段空格数
+    const parentSpaceLen = lineSpaceLen - 2
+    for (let i = line; i > 0; i--) {
+        let currentText = yamlSet[i - 1]
+        const currentSpaceLen = currentText.length - currentText.trimLeft().length
+        currentText = currentText.trimLeft()
+        // 匹配父级字段名
+        const arrayCheck: boolean = isArray && currentSpaceLen === lineSpaceLen && !currentText.startsWith('- ')
+        if (arrayCheck || currentSpaceLen === parentSpaceLen) {
+            let filterPath = currentText.substring(0, currentText.indexOf(':'))
+            // 替换数组字符
+            if (filterPath.startsWith('- ')) filterPath = ArrayNode
+            path += '.' + filterPath
+            const topPath = getPathByYamlData(yamlSet, i - 1)
+            if (topPath !== '') path = topPath + path
+            break
+        }
+    }
+    return path
+}
+
+/**
+ * 根据yaml数组内容获取group、version、kind
+ * yaml数组根据\n切割
+ * @param yamlSet
+ * @return string[]
+ */
+export function getGVK(yamlSet: string[]): string[] {
+    const gvk = []
+    for (const v of yamlSet) {
+        if (v.startsWith('apiVersion: ')) {
+            const apiVersion = v.substring(12).trimRight()
+            const versionData = apiVersion.split('/')
+            if (versionData.length === 1) versionData.unshift('core')
+            gvk[0] = versionData[0]
+            gvk[1] = versionData[1]
+        }
+        if (v.startsWith('kind: ')) {
+            gvk[2] = v.substring(6).trimRight()
+        }
+    }
+    return gvk
 }
 
 /**
@@ -220,4 +269,13 @@ export function downloadData(data: any) {
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
+}
+
+export function copyData(data: any) {
+    let text = document.createElement("textarea");    // 直接构建textarea
+    text.value = data                                           // 设置内容
+    document.body.appendChild(text);                           // 添加临时实例
+    text.select();                                             // 选择实例内容
+    document.execCommand("Copy");                  // 执行复制
+    document.body.removeChild(text);                           // 删除临时实例
 }

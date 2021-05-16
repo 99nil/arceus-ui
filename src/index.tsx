@@ -34,17 +34,17 @@ export default class App extends React.Component<any, any> {
 
     handleHint = async (editor: Editor): Promise<Hints | null> => {
         const cur = editor.getCursor()
-        const end = cur.ch
-        const start = end
         const lineText = editor.getLine(cur.line)
         if (lineText.indexOf(':') !== -1) return null
-        const lineTextClean = lineText.trimLeft()
+        let lineTextClean = lineText.trimLeft()
         const spaceLen = lineText.length - lineTextClean.length
         if (spaceLen % 2 !== 0) return null
 
         const fullText = editor.getValue()
         const fullTextSet = fullText.split('\n')
-        let path = getPathByYamlData(fullTextSet, cur.line)
+        const isArrayLine = lineTextClean.startsWith('- ')
+        let path = getPathByYamlData(fullTextSet, cur.line, isArrayLine)
+        console.log(path)
         if (path === '' && spaceLen > 0) return null
         if (spaceLen === 0) {
             path = 'root'
@@ -59,10 +59,16 @@ export default class App extends React.Component<any, any> {
             kind: gvk[2],
         }
         const result = await tree(params)
+        if (!result) return null
         const node = getTreeNodeByPath(path, [result])
         if (!node || !node.children || node.children.length === 0) return null
 
-        let list = [];
+        let start = spaceLen
+        if (isArrayLine) {
+            lineTextClean = lineTextClean.substring(2)
+            start = spaceLen + 2
+        }
+        let list = []
         for (const v of node.children) {
             if (v.name.indexOf(lineTextClean) === -1) continue
             list.push(v.name)
@@ -70,7 +76,7 @@ export default class App extends React.Component<any, any> {
         return {
             list: list,
             from: Pos(cur.line, start),
-            to: Pos(cur.line, end)
+            to: Pos(cur.line, cur.ch)
         }
     }
 

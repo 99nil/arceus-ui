@@ -151,9 +151,10 @@ export function updateTreeNodeByPath(key: string, nodes: TNode[], value: TNode |
  * 根据yaml数组内容及当前输入行 构建关键字key路径（yaml数组根据\n切割）
  * @param yamlSet
  * @param line
+ * @param isArrayLine
  * @return string
  */
-export function getPathByYamlData(yamlSet: string[], line: number): string {
+export function getPathByYamlData(yamlSet: string[], line: number, isArrayLine ?: boolean): string {
     let path: string = ''
     const lineData = yamlSet[line]
     const filterLineData = lineData.trimLeft()
@@ -185,6 +186,7 @@ export function getPathByYamlData(yamlSet: string[], line: number): string {
             break
         }
     }
+    if (isArrayLine) path += '.' + ArrayNode
     return path
 }
 

@@ -23,6 +23,7 @@ export default class App extends React.Component<any, any> {
             cTreeRef: React.createRef(),
             defaultData: '',
             codeData: '',
+            resourceCache: {},
         }
     }
 
@@ -44,7 +45,6 @@ export default class App extends React.Component<any, any> {
         const fullTextSet = fullText.split('\n')
         const isArrayLine = lineTextClean.startsWith('- ')
         let path = getPathByYamlData(fullTextSet, cur.line, isArrayLine)
-        console.log(path)
         if (path === '' && spaceLen > 0) return null
         if (spaceLen === 0) {
             path = 'root'
@@ -58,8 +58,22 @@ export default class App extends React.Component<any, any> {
             version: gvk[1],
             kind: gvk[2],
         }
-        const result = await tree(params)
-        if (!result) return null
+
+        const resourceCache = this.state.resourceCache
+        let result: any
+        if (resourceCache[params.group] &&
+            resourceCache[params.group][params.version] &&
+            resourceCache[params.group][params.version][params.kind]) {
+            result = resourceCache[params.group][params.version][params.kind]
+        }
+        if (!result) {
+            result = await tree(params)
+            if (!result) return null
+            if (!resourceCache[params.group]) resourceCache[params.group] = {}
+            if (!resourceCache[params.group][params.version]) resourceCache[params.group][params.version] = {}
+            resourceCache[params.group][params.version][params.kind] = result
+            this.setState({resourceCache})
+        }
         const node = getTreeNodeByPath(path, [result])
         if (!node || !node.children || node.children.length === 0) return null
 

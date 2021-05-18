@@ -44,6 +44,9 @@ export default class App extends React.Component<any, any> {
         const fullText = editor.getValue()
         const fullTextSet = fullText.split('\n')
         const isArrayLine = lineTextClean.startsWith('- ')
+        const gvk = getGVK(fullTextSet, cur.line)
+        if (!gvk) return null
+
         let path = getPathByYamlData(fullTextSet, cur.line, isArrayLine)
         if (path === '' && spaceLen > 0) return null
         if (spaceLen === 0) {
@@ -52,13 +55,11 @@ export default class App extends React.Component<any, any> {
             path = 'root' + path
         }
 
-        const gvk = getGVK(fullTextSet)
         const params: InfoParamsType = {
             group: gvk[0],
             version: gvk[1],
             kind: gvk[2],
         }
-
         const resourceCache = this.state.resourceCache
         let result: any
         if (resourceCache[params.group] &&

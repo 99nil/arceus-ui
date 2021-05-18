@@ -193,12 +193,31 @@ export function getPathByYamlData(yamlSet: string[], line: number, isArrayLine ?
 /**
  * 根据yaml数组内容获取group、version、kind
  * yaml数组根据\n切割
- * @param yamlSet
- * @return string[]
+ * @param yamlSet 全文数组
+ * @param line 当前编辑行
+ * @return string[] | null
  */
-export function getGVK(yamlSet: string[]): string[] {
+export function getGVK(yamlSet: string[], line: number): string[] | null {
+    const yamlSetLen = yamlSet.length
+    if (yamlSetLen < line) return null
     const gvk = []
-    for (const v of yamlSet) {
+    for (let i = line; i > 0; i--) {
+        const v = yamlSet[i]
+        if (v.startsWith('---')) break
+        if (v.startsWith('apiVersion: ')) {
+            const apiVersion = v.substring(12).trimRight()
+            const versionData = apiVersion.split('/')
+            if (versionData.length === 1) versionData.unshift('core')
+            gvk[0] = versionData[0]
+            gvk[1] = versionData[1]
+        }
+        if (v.startsWith('kind: ')) {
+            gvk[2] = v.substring(6).trimRight()
+        }
+    }
+    for (let i = line; i < yamlSetLen; i++) {
+        const v = yamlSet[i]
+        if (v.startsWith('---')) break
         if (v.startsWith('apiVersion: ')) {
             const apiVersion = v.substring(12).trimRight()
             const versionData = apiVersion.split('/')

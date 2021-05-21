@@ -13,11 +13,13 @@ import 'codemirror/mode/yaml/yaml';
 import {Editor, EditorChange, Hints, Pos} from "codemirror";
 import {getTreeNodeByPath, getPathByYamlData, getGVK} from "./base";
 import {InfoParamsType, tree} from "./api/resource";
+import {version} from "./api/home";
 
 export default class App extends React.Component<any, any> {
 
     constructor(props: any) {
         super(props);
+        this.checkVersion()
         this.state = {
             navBarRef: React.createRef(),
             cTreeRef: React.createRef(),
@@ -25,6 +27,17 @@ export default class App extends React.Component<any, any> {
             codeData: '',
             resourceCache: {},
         }
+    }
+
+    checkVersion = () => {
+        version().then((result: any) => {
+            if (!result) return
+            if (!result.version) result.version = 'v0.0.0'
+            const item = localStorage.getItem('arceus-version')
+            if (item && item === result.version) return
+            localStorage.clear()
+            localStorage.setItem('arceus-version', result.version)
+        })
     }
 
     /**

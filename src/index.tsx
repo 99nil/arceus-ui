@@ -25,7 +25,6 @@ export default class App extends React.Component<any, any> {
             cTreeRef: React.createRef(),
             defaultData: '',
             codeData: '',
-            resourceCache: {},
         }
     }
 

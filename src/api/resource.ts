@@ -15,7 +15,23 @@ export async function info(params: InfoParamsType): Promise<any> {
 }
 
 export async function tree(params: InfoParamsType): Promise<any> {
-    return request('/resource/tree', {params})
+    let resource: any = {}
+    const item = localStorage.getItem('resource')
+    if (item) {
+        resource = JSON.parse(item)
+        if (resource[params.group] &&
+            resource[params.group][params.version] &&
+            resource[params.group][params.version][params.kind])
+            return resource[params.group][params.version][params.kind]
+    }
+    const result = await request('/resource/tree', {params})
+    if (result) {
+        if (!resource[params.group]) resource[params.group] = {}
+        if (!resource[params.group][params.version]) resource[params.group][params.version] = {}
+        resource[params.group][params.version][params.kind] = result
+        localStorage.setItem('resource', JSON.stringify(resource))
+    }
+    return result
 }
 
 export const uploadURL = host + '/resource/upload'

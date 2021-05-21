@@ -60,21 +60,7 @@ export default class App extends React.Component<any, any> {
             version: gvk[1],
             kind: gvk[2],
         }
-        const resourceCache = this.state.resourceCache
-        let result: any
-        if (resourceCache[params.group] &&
-            resourceCache[params.group][params.version] &&
-            resourceCache[params.group][params.version][params.kind]) {
-            result = resourceCache[params.group][params.version][params.kind]
-        }
-        if (!result) {
-            result = await tree(params)
-            if (!result) return null
-            if (!resourceCache[params.group]) resourceCache[params.group] = {}
-            if (!resourceCache[params.group][params.version]) resourceCache[params.group][params.version] = {}
-            resourceCache[params.group][params.version][params.kind] = result
-            this.setState({resourceCache})
-        }
+        const result = await tree(params)
         const node = getTreeNodeByPath(path, [result])
         if (!node || !node.children || node.children.length === 0) return null
 

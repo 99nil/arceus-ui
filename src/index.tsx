@@ -99,6 +99,7 @@ export default class App extends React.Component<any, any> {
                 <NavBar
                     ref={this.state.navBarRef}
                     data={this.state.codeData}
+                    updateCodeData={this.buildCodeData}
                     fold={() => this.state.cTreeRef.current.foldAll()}
                     unfold={() => this.state.cTreeRef.current.unfoldAll()}
                     buildData={() => this.state.cTreeRef.current.convertToYaml()}

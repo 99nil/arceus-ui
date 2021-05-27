@@ -7,12 +7,13 @@ import {
     DownloadOutlined,
     DoubleLeftOutlined,
     DoubleRightOutlined,
-    SettingOutlined
+    SettingOutlined,
+    ApartmentOutlined
 } from '@ant-design/icons'
 import './index.css'
-import {copyData, downloadData} from "../base";
+import {copyData, downloadData, objToYaml, yamlToObj} from "../base";
 import {generateURL, uploadURL} from "../api/resource";
-import {createURL} from "../api/template";
+import {create as quickstartCreate} from "../api/quickstart";
 
 const uploadProps = {
     name: 'file',
@@ -42,23 +43,6 @@ const generateProps = {
             const data = info.file.response
             downloadData(data)
             message.success(`Custom Resource Definition is downloaded.`)
-            return
-        }
-    },
-}
-
-const templateProps = {
-    name: 'file',
-    action: createURL,
-    showUploadList: false,
-    maxCount: 1,
-    onChange(info: any) {
-        if (info.file.status === 'error') {
-            message.error(`${info.file.name} file upload failed: `, info.file.response)
-            return
-        }
-        if (info.file.status === 'done') {
-            message.success(`${info.file.name} file uploaded successfully`)
             return
         }
     },
@@ -103,11 +87,32 @@ class NavBar extends React.Component<any, any> {
     }
 
     /**
+     * 快速开始
+     */
+    quickstart = () => {
+        if (!this.props.data) {
+            message.error('操作失败，内容为空')
+            return
+        }
+        if (!this.props.updateCodeData) return
+
+        const obj = yamlToObj(this.props.data);
+        const jsonData = JSON.stringify(obj)
+        quickstartCreate(jsonData).then((result: any) => {
+            if (!result) return
+            // obj转yaml
+            const code = objToYaml(result)
+            this.props.updateCodeData(code)
+        })
+    }
+
+    /**
      * 复制
      */
     copyData = () => {
         if (!this.props.data) {
             message.error('复制失败，内容为空')
+            return
         }
         copyData(this.props.data)
     }
@@ -162,6 +167,11 @@ class NavBar extends React.Component<any, any> {
                             <DoubleRightOutlined/>
                         </Button>
                     </Popover>
+                    <Popover trigger="hover" content="快速开始">
+                        <Button className="ml2" type="primary" onClick={this.quickstart}>
+                            <ApartmentOutlined />
+                        </Button>
+                    </Popover>
                     <Popover trigger="hover" content="复制">
                         <Button className="ml2" type="primary" onClick={this.copyData}>
                             <CopyOutlined/>
@@ -190,11 +200,6 @@ class NavBar extends React.Component<any, any> {
                 <Upload {...uploadProps}>
                     <Button type="primary" block>
                         资源上传解析
-                    </Button>
-                </Upload>
-                <Upload {...templateProps}>
-                    <Button type="primary" block>
-                        模板添加
                     </Button>
                 </Upload>
             </Drawer>

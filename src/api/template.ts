@@ -1,4 +1,4 @@
-import request, {host} from "../utils/request";
+import request from "../utils/request";
 import {InfoParamsType} from "./resource";
 
 export async function list(): Promise<any> {
@@ -8,5 +8,3 @@ export async function list(): Promise<any> {
 export async function info(params: InfoParamsType): Promise<any> {
     return request('/template/info', {params})
 }
-
-export const createURL = host + '/template'

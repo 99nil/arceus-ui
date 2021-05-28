@@ -1,5 +1,5 @@
 import React from "react";
-import {message, Affix, Button, Popover, Drawer, Upload} from "antd";
+import {message, Affix, Button, Popover, Drawer, Upload, Modal, Cascader} from "antd";
 import {
     PlusSquareOutlined,
     MinusSquareOutlined,
@@ -14,6 +14,15 @@ import './index.css'
 import {copyData, downloadData, objToYaml, yamlToObj} from "../base";
 import {generateURL, uploadURL} from "../api/resource";
 import {create as quickstartCreate} from "../api/quickstart";
+import {Editor, EditorChange} from "codemirror";
+import {UnControlled as CodeMirror} from "react-codemirror2";
+import {list as ruleList} from "../api/quickstart";
+import {CascaderOptionType} from "antd/lib/cascader";
+
+function filter(inputValue: string, path: CascaderOptionType[]) {
+    if (path.length !== 3) return false
+    return path.some((option: any) => option.label.toLowerCase().indexOf(inputValue.toLowerCase()) > -1);
+}
 
 const uploadProps = {
     name: 'file',
@@ -55,7 +64,31 @@ class NavBar extends React.Component<any, any> {
         this.state = {
             top: 0,
             configVisible: false,
+            isModalVisible: false,
+            ruleOptions: [],
+            rules: [],
+            defaultData: '',
+            codeData: '',
         }
+        this.getOptions()
+    }
+
+    getOptions = () => {
+        ruleList().then((result: any) => {
+            if (!result) return
+            this.setState({ruleOptions: result})
+        })
+    }
+
+    setRules = (value: any) => {
+        if (value.length !== 3) return
+        const rules = this.state.rules
+        rules.push({
+            group: value[0],
+            name: value[1],
+            version: value[2],
+        })
+        this.setState({rules})
     }
 
     /**
@@ -90,19 +123,52 @@ class NavBar extends React.Component<any, any> {
      * 快速开始
      */
     quickstart = () => {
-        if (!this.props.data) {
+        this.setState({
+            isModalVisible: true,
+        })
+    }
+
+    handleOk = () => {
+        // 选择Rule，输入内容，生成数据
+        if (!this.state.rules || this.state.rules.length === 0) {
+            message.error('操作失败，请选择规则')
+            return
+        }
+        if (!this.state.codeData) {
             message.error('操作失败，内容为空')
             return
         }
-        if (!this.props.updateCodeData) return
-
-        const obj = yamlToObj(this.props.data);
+        if (!this.props.updateCodeData) {
+            console.log('updateCodeData function not found')
+            message.error('操作失败，系统错误')
+            return
+        }
+        // yaml转json
+        const obj = yamlToObj(this.state.codeData)
         const jsonData = JSON.stringify(obj)
-        quickstartCreate(jsonData).then((result: any) => {
+        // 拼接yaml资源内容
+        let resource = {
+            apiVersion: 'arceus/v1beta',
+            kind: 'QuickStart',
+            spec: {
+                data: jsonData,
+                rule: this.state.rules,
+            },
+        }
+        quickstartCreate(resource).then((result: any) => {
             if (!result) return
             // obj转yaml
             const code = objToYaml(result)
             this.props.updateCodeData(code)
+            this.setState({
+                isModalVisible: false,
+            })
+        })
+    }
+
+    handleCancel = () => {
+        this.setState({
+            isModalVisible: false,
         })
     }
 
@@ -169,7 +235,7 @@ class NavBar extends React.Component<any, any> {
                     </Popover>
                     <Popover trigger="hover" content="快速开始">
                         <Button className="ml2" type="primary" onClick={this.quickstart}>
-                            <ApartmentOutlined />
+                            <ApartmentOutlined/>
                         </Button>
                     </Popover>
                     <Popover trigger="hover" content="复制">
@@ -203,6 +269,44 @@ class NavBar extends React.Component<any, any> {
                     </Button>
                 </Upload>
             </Drawer>
+            <Modal
+                title="Quick Start"
+                visible={this.state.isModalVisible}
+                onOk={this.handleOk}
+                onCancel={this.handleCancel}
+            >
+                <p>选择规则</p>
+                <p>
+                    <Cascader
+                        className="ml10"
+                        placeholder="QuickStartRule Select"
+                        options={this.state.ruleOptions || []}
+                        onChange={value => this.setRules(value)}
+                        showSearch={{filter, matchInputWidth: false}}
+                        changeOnSelect
+                    />
+                </p>
+                <p>请填写YAML内容</p>
+                <p>
+                    <CodeMirror
+                        className="quickstart"
+                        value={this.state.defaultData}
+                        options={{
+                            mode: 'yaml',
+                            theme: 'material',
+                            lineNumbers: true, // 显示行号
+                            lineWrapping: true, // 支持代码折叠
+                            tabindex: 4,
+                        }}
+                        editorDidMount={(editor: Editor) => {
+                            editor.setSize('auto', 300)
+                        }}
+                        onChange={(editor: Editor, data: EditorChange, value: string) => {
+                            this.setState({codeData: value})
+                        }}
+                    />
+                </p>
+            </Modal>
         </>);
     }
 }

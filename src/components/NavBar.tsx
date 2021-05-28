@@ -276,36 +276,32 @@ class NavBar extends React.Component<any, any> {
                 onCancel={this.handleCancel}
             >
                 <p>选择规则</p>
-                <p>
-                    <Cascader
-                        className="ml10"
-                        placeholder="QuickStartRule Select"
-                        options={this.state.ruleOptions || []}
-                        onChange={value => this.setRules(value)}
-                        showSearch={{filter, matchInputWidth: false}}
-                        changeOnSelect
-                    />
-                </p>
+                <Cascader
+                    className="ml10"
+                    placeholder="QuickStartRule Select"
+                    options={this.state.ruleOptions || []}
+                    onChange={value => this.setRules(value)}
+                    showSearch={{filter, matchInputWidth: false}}
+                    changeOnSelect
+                />
                 <p>请填写YAML内容</p>
-                <p>
-                    <CodeMirror
-                        className="quickstart"
-                        value={this.state.defaultData}
-                        options={{
-                            mode: 'yaml',
-                            theme: 'material',
-                            lineNumbers: true, // 显示行号
-                            lineWrapping: true, // 支持代码折叠
-                            tabindex: 4,
-                        }}
-                        editorDidMount={(editor: Editor) => {
-                            editor.setSize('auto', 300)
-                        }}
-                        onChange={(editor: Editor, data: EditorChange, value: string) => {
-                            this.setState({codeData: value})
-                        }}
-                    />
-                </p>
+                <CodeMirror
+                    className="quickstart"
+                    value={this.state.defaultData}
+                    options={{
+                        mode: 'yaml',
+                        theme: 'material',
+                        lineNumbers: true, // 显示行号
+                        lineWrapping: true, // 支持代码折叠
+                        tabindex: 4,
+                    }}
+                    editorDidMount={(editor: Editor) => {
+                        editor.setSize('auto', 300)
+                    }}
+                    onChange={(editor: Editor, data: EditorChange, value: string) => {
+                        this.setState({codeData: value})
+                    }}
+                />
             </Modal>
         </>);
     }

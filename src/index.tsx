@@ -129,6 +129,7 @@ export default class App extends React.Component<any, any> {
             message.error('不存在')
             return
         }
+        if (codeMultiData[inf].trim() === '') return
         convert(inf, outf, codeMultiData[inf]).then((result: any) => {
             if (!result) return
             if (typeof result === 'object') result = JSON.stringify(result)

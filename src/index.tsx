@@ -13,12 +13,13 @@ import 'codemirror/mode/yaml/yaml';
 import 'codemirror/mode/javascript/javascript';
 import 'codemirror/mode/xml/xml';
 import 'codemirror/mode/toml/toml';
-import {Editor, EditorChange, Hints, Pos} from "codemirror";
+import {Editor, EditorChange, Hint, Hints, Pos} from "codemirror";
 import {getTreeNodeByPath, getPathByYamlData, getGVK} from "./base";
 import {InfoParamsType, tree} from "./api/resource";
 import {version} from "./api/home";
 import {Tabs, message} from "antd";
 import {convert} from "./api/raw";
+import {ArrayNode} from "./base/base";
 
 const {TabPane} = Tabs;
 
@@ -106,10 +107,12 @@ export default class App extends React.Component<any, any> {
             lineTextClean = lineTextClean.substring(2)
             start = spaceLen + 2
         }
-        let list = []
+        let list: Hint[] = []
         for (const v of node.children) {
             if (v.name.indexOf(lineTextClean) === -1) continue
-            list.push(v.name)
+            let hint: Hint = {text: v.name, displayText: v.name}
+            hint.text += v.name === ArrayNode ? ' ' : ':'
+            list.push(hint)
         }
         return {
             list: list,

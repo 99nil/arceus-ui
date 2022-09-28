@@ -11,7 +11,6 @@ import 'codemirror/addon/hint/show-hint.css';
 import 'codemirror/addon/selection/active-line';
 import 'codemirror/mode/yaml/yaml';
 import 'codemirror/mode/javascript/javascript';
-import 'codemirror/mode/xml/xml';
 import 'codemirror/mode/toml/toml';
 import {Editor, EditorChange, Hint, Hints, Pos} from "codemirror";
 import {getTreeNodeByPath, getPathByYamlData, getGVK} from "./base";
@@ -35,13 +34,11 @@ export default class App extends React.Component<any, any> {
                 yaml: '',
                 json: '',
                 toml: '',
-                xml: '',
             },
             codeMultiData: {
                 yaml: '',
                 json: '',
                 toml: '',
-                xml: '',
             },
             activeKey: 'yaml'
         }
@@ -243,26 +240,6 @@ export default class App extends React.Component<any, any> {
                                 onChange={(editor: Editor, data: EditorChange, value: string) => {
                                     let codeMultiData = this.state.codeMultiData
                                     codeMultiData.toml = value
-                                    this.setState({codeMultiData})
-                                }}
-                            />
-                        </TabPane>
-                        <TabPane tab="XML" key="xml">
-                            <CodeMirror
-                                value={this.state.defaultMultiData.xml}
-                                options={{
-                                    mode: 'xml',
-                                    theme: 'material',
-                                    lineNumbers: true, // 显示行号
-                                    lineWrapping: true, // 支持代码折叠
-                                    tabindex: 4,
-                                }}
-                                editorDidMount={(editor: Editor) => {
-                                    editor.setSize('auto', 500)
-                                }}
-                                onChange={(editor: Editor, data: EditorChange, value: string) => {
-                                    let codeMultiData = this.state.codeMultiData
-                                    codeMultiData.xml = value
                                     this.setState({codeMultiData})
                                 }}
                             />

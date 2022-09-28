@@ -8,7 +8,8 @@ import {
     DoubleLeftOutlined,
     DoubleRightOutlined,
     SettingOutlined,
-    ApartmentOutlined
+    ApartmentOutlined,
+    GithubOutlined
 } from '@ant-design/icons'
 import './index.css'
 import {copyData, downloadData, objToYaml, yamlToObj} from "../base";
@@ -208,6 +209,11 @@ class NavBar extends React.Component<any, any> {
         return (<>
             <Affix offsetTop={this.state.top}>
                 <div className="navBar">
+                    <Popover trigger="hover" content="Github">
+                        <Button className="ml2" href="https://github.com/99nil/arceus" target="_blank">
+                            <GithubOutlined style={{ fontSize: '15px' }} />
+                        </Button>
+                    </Popover>
                     <Popover trigger="hover" content="设置">
                         <Button className="ml2" type="primary" onClick={this.configOpen}>
                             <SettingOutlined/>
